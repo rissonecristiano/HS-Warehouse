@@ -562,6 +562,11 @@ const TR=[
 ['Non riesco a caricare Firebase: controlla la connessione e ricarica.','Cannot load Firebase: check the connection and reload.','Nie można załadować Firebase: sprawdź połączenie i odśwież.','Nevar ielādēt Firebase: pārbaudi savienojumu un pārlādē.'],
 ['Manca la configurazione Firebase: incolla i tuoi dati nel file config.js (vedi LEGGIMI).','Firebase setup missing: paste your details in config.js (see LEGGIMI).','Brak konfiguracji Firebase: wklej dane do config.js (zob. LEGGIMI).','Trūkst Firebase iestatījumu: ielīmē datus failā config.js (sk. LEGGIMI).'],
 ['Il database rifiuta l’accesso: controlla le regole di Firestore (vedi LEGGIMI).','The database refuses access: check the Firestore rules (see LEGGIMI).','Baza odmawia dostępu: sprawdź reguły Firestore (zob. LEGGIMI).','Datubāze liedz piekļuvi: pārbaudi Firestore noteikumus (sk. LEGGIMI).'],
+['Il magazzino è vuoto','The store is empty','Magazyn jest pusty','Noliktava ir tukša'],
+['Carica i dati di partenza (motori, turbo, gomme e limiti km) dal file dati-iniziali.json pubblicato con l’app.','Load the starting data (engines, turbos, tyres and km limits) from the dati-iniziali.json file published with the app.','Wczytaj dane początkowe (silniki, turbo, opony i limity km) z pliku dati-iniziali.json opublikowanego z aplikacją.','Ielādē sākuma datus (dzinēji, turbo, riepas un km limiti) no faila dati-iniziali.json, kas publicēts kopā ar lietotni.'],
+['Carica i dati iniziali','Load starting data','Wczytaj dane początkowe','Ielādēt sākuma datus'],
+['Dati iniziali caricati','Starting data loaded','Dane początkowe wczytane','Sākuma dati ielādēti'],
+['File dati-iniziali.json non trovato sul sito.','dati-iniziali.json not found on the site.','Nie znaleziono pliku dati-iniziali.json na stronie.','Fails dati-iniziali.json vietnē nav atrasts.'],
 ];
 const LI={it:0,en:1,pl:2,lv:3};
 const NUM=/\d+(?:[.,]\d+)*/g;
@@ -669,7 +674,8 @@ function render(){
   if(!S.db)return;
   const v={motori:vEngines,gomme:vTires,impostazioni:vSettings}[S.tab]();
   const fab=$('#fab'),fk=W()&&{motori:'Nuovo',gomme:'Nuovo set'}[S.tab];fab.hidden=!fk;if(fk)$('#fabTxt').textContent=fk;
-  $('#main').innerHTML=(S.ro?`<div class="banner">Puoi consultare il magazzino ma non modificarlo. Chiedi al proprietario l’accesso come Collaboratore.</div>`:'')+v;
+  const empty=S.live&&S.db&&!S.eng.length&&!S.tur.length&&!S.tires.length&&S.tab!=='impostazioni';
+  $('#main').innerHTML=(empty?`<div class="panel" style="padding:16px;display:grid;gap:10px;margin-bottom:16px"><h3 class="sub">Il magazzino è vuoto</h3><p class="muted" style="margin:0">Carica i dati di partenza (motori, turbo, gomme e limiti km) dal file dati-iniziali.json pubblicato con l’app.</p><div class="btns"><button class="btn primary" data-act="seedData">Carica i dati iniziali</button></div></div>`:'')+v;
 }
 
 $('#langBtn').addEventListener('click',()=>{const m=$('#modal');
@@ -944,6 +950,10 @@ const ACT={
   exportData:()=>{const pick=a=>Object.fromEntries(a.map(({id,...d})=>[id,d]));
     const out={app:'magazzino-motori-gomme',exported:today(),eng:pick(S.eng),tur:pick(S.tur),tires:pick(S.tires),config:{main:S.cfg}};
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download='magazzino-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove()},
+  seedData:()=>run(async()=>{const r=await fetch('dati-iniziali.json',{cache:'no-store'});if(!r.ok)throw new Error('File dati-iniziali.json non trovato sul sito.');const d=await r.json();
+    let b=S.db.batch(),k=0;for(const c of ['eng','tur','tires'])for(const [id,doc] of Object.entries(d[c]||{})){b.set(S.db.collection(c).doc(id),doc);k++}
+    if(d.config&&d.config.main){b.set(S.db.doc('config/main'),{...DEF,...d.config.main});k++}
+    await b.commit();toast('Dati iniziali caricati')}),
   importData:()=>{const f=$('#impFile');f.value='';f.onchange=()=>{const file=f.files[0];if(!file)return;
     file.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){toast('File non valido');return}
       const n=['eng','tur','tires'].reduce((a,c)=>a+Object.keys(d[c]||{}).length,0);
