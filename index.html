@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15202c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Magazzino">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Magazzino Motori e Gomme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: scheda d'officina — barra con due reparti (motori+turbo, gomme), righe a cartellino con barre d'usura in km */
+:root{
+  --bg:#eceff2; --surface:#ffffff; --sunk:#f5f7f9; --ink:#15202c; --muted:#5a6776; --line:#d3d9e0;
+  --accent:#1f6fb2; --accent-ink:#ffffff; --pair:#e6eef7;
+  --ok:#2c8a4b; --ok-soft:#e1f2e6; --warn:#b97c00; --warn-soft:#fbf0d4; --bad:#c42a2a; --bad-soft:#fbe1e1;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:6px; --logo:none;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151c; --surface:#17202a; --sunk:#121a22; --ink:#e5eaf0; --muted:#93a0af; --line:#2a3644;
+  --accent:#5aa7ea; --accent-ink:#06121e; --pair:#1b2a3a;
+  --ok:#52c27f; --ok-soft:#173023; --warn:#efb64a; --warn-soft:#352a12; --bad:#ff6d6d; --bad-soft:#3a1a1c; --logo:invert(1); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151c; --surface:#17202a; --sunk:#121a22; --ink:#e5eaf0; --muted:#93a0af; --line:#2a3644;
+  --accent:#5aa7ea; --accent-ink:#06121e; --pair:#1b2a3a;
+  --ok:#52c27f; --ok-soft:#173023; --warn:#efb64a; --warn-soft:#352a12; --bad:#ff6d6d; --bad-soft:#3a1a1c; --logo:invert(1); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1560px;margin:0 auto;padding-inline:16px}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.hbar{display:flex;align-items:center;gap:14px;padding-block:8px}
+.logos{display:flex;align-items:center;gap:10px;flex:none}
+.logos img{height:34px;width:auto;filter:var(--logo);display:block}
+.logos img.f4{height:24px}
+.ttl{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.06em;text-transform:uppercase;margin:0;line-height:1;white-space:nowrap}
+.ttl b{color:var(--accent)}
+.seg{display:flex;flex:1 1 auto;max-width:420px;margin-left:auto;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;min-width:0}
+.seg button{flex:1 1 0;min-width:0;font:600 16px var(--f-display);letter-spacing:.04em;text-transform:uppercase;background:none;border:0;border-radius:7px;color:var(--muted);padding:9px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button[aria-current="page"]{background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.gear{flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.ls{display:none}
+.langb{font:700 15px var(--f-display);letter-spacing:.04em;color:var(--ink)}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.langs .btn{min-height:56px;font-size:17px;justify-content:center}
+.langs .btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.gear[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#status{display:block;color:var(--muted);font-size:12px;padding-bottom:6px}
+#status.ok,#status:empty{display:none}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 60px;display:grid;gap:18px}
+section.grp{display:grid;gap:10px;padding-top:6px}
+.banner{background:var(--warn-soft);border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;font-size:13px}
+h2.sec{font:700 20px var(--f-display);letter-spacing:.05em;text-transform:uppercase;margin:0}
+h3.sub{font:700 16px var(--f-display);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.sechead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.btn{font:500 13px var(--f-body);border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 11px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.sm{padding:4px 8px;font-size:12px}
+.btn.link{border:0;background:none;color:var(--muted);padding:4px 6px;text-decoration:underline;text-underline-offset:2px}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--surface);padding:12px 14px;display:grid;gap:2px}
+.kpi .n{font:700 30px var(--f-display);line-height:1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi.bad .n{color:var(--bad)} .kpi.warn .n{color:var(--warn)}
+.chip{display:inline-flex;align-items:center;gap:5px;font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.plain::before{display:none}
+.list{display:grid}
+.row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,1.5fr) minmax(0,1.5fr) 440px;gap:10px 20px;align-items:center;padding:12px 14px;border-top:1px solid var(--line);position:relative}
+.row.solo{grid-template-columns:minmax(150px,1fr) minmax(0,3fr) 440px}
+.row:first-child{border-top:0}
+.row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+.row.lvl-bad::before{background:var(--bad)} .row.lvl-warn::before{background:var(--warn)}
+.name{font-weight:600;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.name .sn{font:500 15px var(--f-mono);white-space:nowrap}
+.kind{font:700 12px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.subl{color:var(--muted);font-size:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.side{display:grid;gap:8px;justify-items:end}
+.bars{display:grid;gap:5px;min-width:0}
+.pairbox{background:var(--pair);border-radius:5px;padding:8px 10px;display:grid;gap:5px;min-width:0}
+.pairbox .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.bline{display:grid;grid-template-columns:68px minmax(60px,1fr) auto;gap:8px;align-items:center;font-size:12px}
+.bline .bl{color:var(--muted)}
+.bar{height:7px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--ok)}
+.bar.warn i{background:var(--warn)} .bar.bad i{background:var(--bad)}
+.bar .mark{position:absolute;top:0;bottom:0;width:1px;background:var(--muted);opacity:.6}
+.bv{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tot{font-size:12px;color:var(--muted)} .tot b{color:var(--ink);font:500 13px var(--f-mono)}
+.muted{color:var(--muted)}
+.empty{padding:28px 18px;text-align:center;color:var(--muted);display:grid;gap:10px;justify-items:center}
+.empty strong{color:var(--ink);font-size:15px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input,textarea{font:16px var(--f-body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:7px 9px;width:100%}
+.filters select{width:auto}
+textarea{min-height:110px;font-family:var(--f-mono);font-size:12px}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font:600 11px var(--f-body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+tr:first-child td{border-top:0}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.nw,td.nw b{white-space:nowrap}
+.evs{font-size:12px;line-height:1.5;min-width:190px}
+.evs b{font-weight:500}
+.hit{background:var(--warn-soft);border-radius:3px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.grid2 .full{grid-column:1/-1}
+.fld{display:grid;gap:4px}
+.fld label{font-size:12px;color:var(--muted);font-weight:500}
+.fld .hint{font-size:11px;color:var(--muted)}
+.fld.check{display:flex;gap:8px;align-items:center}
+.fld.check input{width:auto}
+.tgrp{display:grid;gap:8px}
+.tgrp h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tgrp h3 small{font:500 13px var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted)}
+.tlist{display:grid;gap:8px}
+.tcard{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--ink);font:inherit;cursor:pointer;min-height:64px}
+.tcard:active{transform:scale(.99)}
+.tcard .tcode{font:700 24px var(--f-display);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcard .tkm{font:500 15px var(--f-mono);color:var(--muted);white-space:nowrap}
+.tcard .tkm b{font:600 22px var(--f-mono);color:var(--ink)}
+.tst{font:700 13px var(--f-body);letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border-radius:999px;white-space:nowrap}
+.tst.ok{background:var(--ok-soft);color:var(--ok)}
+.tst.x{background:var(--bad-soft);color:var(--bad);min-width:40px;text-align:center;font-size:16px}
+.tcard.x{background:var(--sunk)}
+.tcard.x .tcode,.tcard.x .tkm b{color:var(--muted)}
+.det{display:grid;gap:14px}
+.det .big{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.det .big .tcode{font:700 34px var(--f-display);letter-spacing:.04em}
+.det .kmbig{font:600 28px var(--f-mono)}
+.fia{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fia div{background:var(--sunk);border-radius:6px;padding:8px 10px;display:grid;gap:2px}
+.fia span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fia b{font:500 15px var(--f-mono);overflow-wrap:anywhere}
+.sep{grid-column:1/-1;font:700 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+#modal{position:fixed;inset:0;background:rgba(10,15,20,.55);z-index:50;display:grid;place-items:center;padding:16px}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:8px;width:min(580px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:18px;display:grid;gap:14px}
+.sheet h3{font:700 20px var(--f-display);letter-spacing:.04em;text-transform:uppercase;margin:0}
+.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.acts .grow{margin-right:auto}
+.ferr{color:var(--bad);font-size:13px;margin:0}
+.log{display:grid;font-size:13px}
+.log div{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.log div:first-child{border-top:0}
+#fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;display:none;align-items:center;gap:8px;border:0;border-radius:999px;padding:0 22px 0 18px;height:56px;background:var(--accent);color:var(--accent-ink);font:600 17px var(--f-body);box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer}
+#fab .pl{font-size:28px;line-height:1;font-weight:400;margin-top:-2px}
+#fab:active{transform:scale(.97)}
+.choice{display:grid;gap:10px}
+.choice .btn{min-height:56px;font-size:18px;justify-content:center}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:6px;font-size:13px;z-index:60;max-width:calc(100% - 32px)}
+@media (max-width:370px){
+  .logos img.f4{display:none}
+}
+@media (max-width:1100px){
+  .ttl{display:none}
+}
+@media (max-width:900px){
+  .sechead:has(> h2.sec){display:none}
+  .inl{display:none!important}
+  #fab:not([hidden]){display:inline-flex}
+  #main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  #toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+  body{font-size:16px}
+  .btn,.btn.sm{min-height:42px;padding:9px 14px;font-size:15px}
+  .btn.link{min-height:0}
+  .hbar{gap:8px;padding-block:6px}
+  .gear{width:40px;height:40px}
+  .langb{width:36px}
+  .lf{display:none}
+  .ls{display:inline}
+  .ttl{display:none}
+  .logos{gap:6px}
+  .logos img{height:30px} .logos img.f4{height:17px}
+  .seg{max-width:none}
+  .seg button{font-size:15px;padding:6px 4px;letter-spacing:.01em;white-space:normal;line-height:1.05;min-height:40px;text-overflow:clip}
+  #modal{place-items:end center;padding:0}
+  .sheet{width:100%;border-radius:14px 14px 0 0;max-height:85vh;max-height:85dvh;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+  .acts .btn{flex:1 1 auto}
+  .tcard .tcode{font-size:22px}
+  .row,.row.solo{grid-template-columns:minmax(0,1fr)}
+  .side{justify-items:start}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .kpi:last-child:nth-child(odd){grid-column:1/-1}
+}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s ease}}
+@media (display-mode: standalone){header.top{padding-top:env(safe-area-inset-top,0px)}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap hbar" id="tabs">
+    <div class="logos"><img src="logo-squadra.png" alt="Logo squadra"><img class="f4" src="logo-f4.png" alt="F4"></div>
+    <h1 class="ttl" data-notr>Magazzino <b>Motori</b> e Gomme</h1>
+    <nav class="seg" aria-label="Reparti">
+      <button data-tab="motori"><span class="lf">Motori e turbo</span><span class="ls">Motori</span></button>
+      <button data-tab="gomme">Gomme</button>
+    </nav>
+    <button class="gear langb" id="langBtn" type="button" aria-label="Lingua" title="Lingua">IT</button>
+    <button class="gear" data-tab="impostazioni" aria-label="Impostazioni" title="Impostazioni"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+  <div class="wrap"><span class="meta" id="status">Connessione…</span></div>
+</header>
+<main class="wrap" id="main">
+  <div class="panel empty"><strong>Caricamento del magazzino</strong><span>Motori, turbo e gomme compariranno qui.</span></div>
+</main>
+<button id="fab" type="button" hidden><span class="pl" aria-hidden="true">+</span><span id="fabTxt">Nuovo</span></button>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(typeof v==='string')v=v.trim().replace(/\.(?=\d{3}\b)/g,'').replace(',','.');const n=Number(v);return isFinite(n)?n:0};
+const fmt=n=>num(n).toLocaleString('it-IT',{maximumFractionDigits:1});
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const dIt=s=>s?s.split('-').reverse().join('/'):'—';
+const norm=s=>String(s||'').trim().toLowerCase();
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const DEF={engRevKm:5000,engLifeKm:8000,turPerfKm:4000,turLifeKm:5000,warnPct:80,pilots:[]};
+const TSTAT={disponibile:'Disponibile',scartato:'Scartato'};
+const S={eng:[],tur:[],tires:[],cfg:{...DEF},db:null,ro:false,live:false,
+  tab:['motori','gomme','impostazioni'].includes(store.get('mg_tab'))?store.get('mg_tab'):'motori',
+  showOld:false,pil:store.get('mg_pil'),fTire:'tutti',q:''};
+const NONE='__none';
+const WHEELS=[['fiaFL','Ant. sx'],['fiaFR','Ant. dx'],['fiaRL','Post. sx'],['fiaRR','Post. dx']];
+const ESTAT={disponibile:'Disponibile',revisione:'In revisione',scartato:'Scartato'};
+
+/* ---------- km ---------- */
+const evs=x=>Array.isArray(x&&x.events)?x.events:[];
+const kmTot=x=>num(x.kmStart)+evs(x).reduce((a,e)=>a+num(e.km),0);
+const kmRev=x=>Math.max(0,kmTot(x)-num(x.revAt));
+const engById=id=>S.eng.find(x=>x.id===id);
+const turById=id=>S.tur.find(x=>x.id===id);
+const engOfTurbo=t=>S.eng.find(e=>e.turboId===t.id);
+function health(x,kind){
+  const c=S.cfg,w=num(c.warnPct||80)/100;
+  let lvl='ok';const why=[];const up=(l,s)=>{if(l==='bad'||(l==='warn'&&lvl==='ok'))lvl=l;why.push({l,s})};
+  let L;
+  if(kind==='tur'){
+    const tot=kmTot(x),perf=num(c.turPerfKm),life=num(c.turLifeKm);
+    L=[{k:'perf',lab:'Performance',val:tot,max:perf,soft:true},{k:'life',lab:'Cambio',val:tot,max:life}].filter(m=>m.max>0).map(m=>({...m,p:m.val/m.max}));
+    if(life&&tot>=life)up('bad','Da cambiare: +'+fmt(tot-life)+' km');
+    else if(perf&&tot>=perf)up('warn','Oltre performance · cambio tra '+fmt(life-tot)+' km');
+  }else{
+    L=[{k:'rev',lab:'Revisione',val:kmRev(x),max:num(c.engRevKm)},{k:'life',lab:'Vita',val:kmTot(x),max:num(c.engLifeKm)}].filter(m=>m.max>0).map(m=>({...m,p:m.val/m.max}));
+    for(const m of L){const rem=m.max-m.val;
+      if(m.p>=1)up('bad',m.k==='rev'?'Revisione superata di '+fmt(-rem)+' km':'Vita superata di '+fmt(-rem)+' km');
+      else if(m.p>=w)up('warn',m.k==='rev'?'Revisione tra '+fmt(rem)+' km':'Fine vita tra '+fmt(rem)+' km')}
+  }
+  if(!L.length)lvl='na';
+  why.sort((a,b)=>(b.l==='bad')-(a.l==='bad'));
+  return{lvl,L,why,maxP:L.reduce((a,m)=>Math.max(a,m.p),0)};
+}
+const RANK={na:0,ok:1,warn:2,bad:3};
+function bar(m){
+  const w=num(S.cfg.warnPct||80);const cls=m.soft?(m.p>=1?'warn':''):(m.p>=1?'bad':m.p>=w/100?'warn':'');
+  return `<div class="bline"><span class="bl">${m.lab}</span><div class="bar ${cls}" role="img" aria-label="${m.lab} ${Math.round(m.p*100)}%"><i style="width:${Math.min(100,m.p*100).toFixed(1)}%"></i><span class="mark" style="left:${w}%"></span></div><span class="bv">${fmt(m.val)} / ${fmt(m.max)} km</span></div>`;
+}
+const chip=h=>h.lvl==='bad'?`<span class="chip bad">${esc(h.why[0].s)}</span>`:h.lvl==='warn'?`<span class="chip warn">${esc(h.why[0].s)}</span>`:h.lvl==='ok'?`<span class="chip ok">In regola</span>`:`<span class="chip">Senza limite</span>`;
+const stChip=x=>x.status==='revisione'?`<span class="chip warn plain">In revisione</span>`:x.status==='scartato'?`<span class="chip bad plain">Scartato</span>`:'';
+const W=()=>!S.ro&&!!S.db;
+const B=(act,id,label,cls='')=>W()?`<button class="btn sm ${cls}" data-act="${act}" data-id="${esc(id)}">${label}</button>`:'';
+const logPush=(x,t,d)=>[...(x.log||[]),{d:d||today(),t}].slice(-100);
+const pilots=()=>Array.isArray(S.cfg.pilots)?S.cfg.pilots:[];
+
+/* ---------- toast / modal ---------- */
+/* ---------- lingue ---------- */
+/* Ogni riga: [italiano, english, polski, latviešu]. "#" = numero, "{}" = testo (codici, nomi). Nelle traduzioni {1},{2}… sono i valori nell'ordine in cui compaiono in italiano. */
+const LANGS=[['it','IT','Italiano'],['en','EN','English'],['pl','PL','Polski'],['lv','LV','Latviešu']];
+const TITLES={it:'Magazzino <b>Motori</b> e Gomme',en:'<b>Engine</b> &amp; Tyre Store',pl:'Magazyn <b>silników</b> i opon',lv:'<b>Dzinēju</b> un riepu noliktava'};
+const TR=[
+['Magazzino','In stock','Na magazynie','Noliktavā'],
+['Motori e turbo','Engines & turbos','Silniki i turbo','Dzinēji un turbo'],
+['Gomme','Tyres','Opony','Riepas'],
+['Impostazioni','Settings','Ustawienia','Iestatījumi'],
+['Lingua','Language','Język','Valoda'],
+['Reparti','Sections','Działy','Sadaļas'],
+['Connessione…','Connecting…','Łączenie…','Savienojas…'],
+['Aggiornato in tempo reale','Live','Na żywo','Tiešsaistē'],
+['Connessione interrotta, ricarica la pagina','Connection lost, reload the page','Połączenie przerwane, odśwież stronę','Savienojums pārtrūka, pārlādē lapu'],
+['Caricamento del magazzino','Loading the store','Ładowanie magazynu','Ielādē noliktavu'],
+['Motori, turbo e gomme compariranno qui.','Engines, turbos and tyres will appear here.','Silniki, turbo i opony pojawią się tutaj.','Dzinēji, turbo un riepas parādīsies šeit.'],
+['Magazzino non raggiungibile','Store not reachable','Magazyn niedostępny','Noliktava nav pieejama'],
+['Puoi consultare il magazzino ma non modificarlo. Chiedi al proprietario l’accesso come Collaboratore.','You can view the store but not edit it. Ask the owner for Collaborator access.','Możesz przeglądać magazyn, ale nie edytować. Poproś właściciela o dostęp Współpracownika.','Noliktavu vari skatīt, bet ne labot. Palūdz īpašniekam līdzstrādnieka piekļuvi.'],
+['Nuovo','New','Nowy','Jauns'],
+['Aggiungi','Add','Dodaj','Pievienot'],
+// motori e turbo
+['Motori','Engines','Silniki','Dzinēji'],
+['Turbo','Turbo','Turbo','Turbo'],
+['Motore','Engine','Silnik','Dzinējs'],
+['Da revisionare','Rebuild due','Do remontu','Jāremontē'],
+['In avvicinamento','Approaching','Zbliża się','Tuvojas'],
+['Mostra anche scartati','Show scrapped too','Pokaż też wycofane','Rādīt arī norakstītos'],
+['Limiti: motore rev. # / vita # km · turbo performance # / cambio # km ·','Limits: engine rebuild {1} / life {2} km · turbo performance {3} / change {4} km ·','Limity: silnik remont {1} / żywotność {2} km · turbo osiągi {3} / wymiana {4} km ·','Limiti: dzinējs remonts {1} / mūžs {2} km · turbo veiktspēja {3} / maiņa {4} km ·'],
+['cambia','change','zmień','mainīt'],
+['Motori (#)','Engines ({1})','Silniki ({1})','Dzinēji ({1})'],
+['Turbo (#)','Turbo ({1})','Turbo ({1})','Turbo ({1})'],
+['Nuovo motore','New engine','Nowy silnik','Jauns dzinējs'],
+['Nuovo turbo','New turbo','Nowe turbo','Jauns turbo'],
+['Nessun motore registrato.','No engines yet.','Brak silników.','Nav neviena dzinēja.'],
+['Nessun turbo registrato.','No turbos yet.','Brak turbo.','Nav neviena turbo.'],
+['Senza turbo','No turbo','Bez turbo','Bez turbo'],
+['Non accoppiato','Not paired','Niesparowane','Nav sapārots'],
+['Sul motore','On engine','Na silniku','Uz dzinēja'],
+['Totale','Total','Razem','Kopā'],
+['· 1 evento','· 1 event','· 1 wydarzenie','· 1 notikums'],
+['· # eventi','· {1} events','· wydarzenia: {1}','· notikumi: {1}'],
+['· 1 evento · ultimo:','· 1 event · last:','· 1 wydarzenie · ostatnie:','· 1 notikums · pēdējais:'],
+['· # eventi · ultimo:','· {1} events · last:','· wydarzenia: {1} · ostatnie:','· notikumi: {1} · pēdējais:'],
+['Revisione','Rebuild','Remont','Remonts'],
+['Vita','Life','Żywotność','Mūžs'],
+['Performance','Performance','Osiągi','Veiktspēja'],
+['Cambio','Change','Wymiana','Maiņa'],
+['Revisione #%','Rebuild {1}%','Remont {1}%','Remonts {1}%'],
+['Vita #%','Life {1}%','Żywotność {1}%','Mūžs {1}%'],
+['Performance #%','Performance {1}%','Osiągi {1}%','Veiktspēja {1}%'],
+['Cambio #%','Change {1}%','Wymiana {1}%','Maiņa {1}%'],
+['Revisione tra # km','Rebuild in {1} km','Remont za {1} km','Remonts pēc {1} km'],
+['Revisione superata di # km','Rebuild overdue by {1} km','Remont przekroczony o {1} km','Remonts nokavēts par {1} km'],
+['Vita superata di # km','Life exceeded by {1} km','Żywotność przekroczona o {1} km','Mūžs pārsniegts par {1} km'],
+['Fine vita tra # km','End of life in {1} km','Koniec żywotności za {1} km','Mūža beigas pēc {1} km'],
+['Da cambiare: +# km','Replace: +{1} km','Do wymiany: +{1} km','Jāmaina: +{1} km'],
+['Oltre performance · cambio tra # km','Past performance · change in {1} km','Po osiągach · wymiana za {1} km','Pāri veiktspējai · maiņa pēc {1} km'],
+['In regola','OK','W normie','Kārtībā'],
+['Nessun limite impostato','No limit set','Brak limitu','Nav limita'],
+['Senza limite','No limit','Bez limitu','Bez limita'],
+['Disponibile','Available','Dostępny','Pieejams'],
+['In revisione','At rebuild','W remoncie','Remontā'],
+['Scartato','Scrapped','Wycofany','Norakstīts'],
+['A magazzino','In stock','Na magazynie','Noliktavā'],
+['Scartato (da cambiare)','Scrapped (to replace)','Wycofany (do wymiany)','Norakstīts (jāmaina)'],
+['+ Evento','+ Event','+ Wydarzenie','+ Notikums'],
+['Cambia turbo','Change turbo','Zmień turbo','Mainīt turbo'],
+['Accoppia turbo','Pair turbo','Sparuj turbo','Sapārot turbo'],
+['Revisionato','Rebuilt','Po remoncie','Izremontēts'],
+['Modifica','Edit','Edytuj','Labot'],
+['Storico','History','Historia','Vēsture'],
+['Cambia motore','Change engine','Zmień silnik','Mainīt dzinēju'],
+['Accoppia a motore','Pair to engine','Sparuj z silnikiem','Sapārot ar dzinēju'],
+['Accoppia','Pair','Sparuj','Sapārot'],
+['Conferma','Confirm','Potwierdź','Apstiprināt'],
+// form motori/turbo
+['Numero motore (SN)','Engine number (SN)','Numer silnika (SN)','Dzinēja numurs (SN)'],
+['Numero turbo (SN)','Turbo number (SN)','Numer turbo (SN)','Turbo numurs (SN)'],
+['Km già percorsi','Km already run','Km już przejechane','Jau nobrauktie km'],
+['Km del motore prima di registrarlo qui','Engine km before adding it here','Km silnika przed dodaniem tutaj','Dzinēja km pirms pievienošanas šeit'],
+['Km del turbo prima di registrarlo qui','Turbo km before adding it here','Km turbo przed dodaniem tutaj','Turbo km pirms pievienošanas šeit'],
+['Km dall’ultima revisione','Km since last rebuild','Km od ostatniego remontu','Km kopš pēdējā remonta'],
+['Stato','Status','Stan','Statuss'],
+['Note','Notes','Uwagi','Piezīmes'],
+['Note (facoltative)','Notes (optional)','Uwagi (opcjonalnie)','Piezīmes (neobligāti)'],
+['Turbo accoppiato','Paired turbo','Sparowane turbo','Sapārotais turbo'],
+['Turbo già a magazzino','Turbo already in stock','Turbo już na magazynie','Turbo jau noliktavā'],
+['Oppure nuovo turbo: SN','Or new turbo: SN','Lub nowe turbo: SN','Vai jauns turbo: SN'],
+['lascia vuoto se non serve','leave empty if not needed','zostaw puste, jeśli niepotrzebne','atstāj tukšu, ja nevajag'],
+['Km già percorsi dal turbo','Turbo km already run','Km już przejechane przez turbo','Turbo jau nobrauktie km'],
+['— nessuno / nuovo turbo qui sotto —','— none / new turbo below —','— brak / nowe turbo poniżej —','— nav / jauns turbo zemāk —'],
+['— nessuno —','— none —','— brak —','— nav —'],
+['— nessun turbo —','— no turbo —','— bez turbo —','— bez turbo —'],
+['{} · # km · in revisione','{1} · {2} km · at rebuild','{1} · {2} km · w remoncie','{1} · {2} km · remontā'],
+['{} · # km · senza turbo','{1} · {2} km · no turbo','{1} · {2} km · bez turbo','{1} · {2} km · bez turbo'],
+['{} · # km · ha già il turbo {} (torna a magazzino)','{1} · {2} km · already has turbo {3} (back to stock)','{1} · {2} km · ma już turbo {3} (wraca na magazyn)','{1} · {2} km · jau ir turbo {3} (atpakaļ noliktavā)'],
+['Modifica motore','Edit engine','Edytuj silnik','Labot dzinēju'],
+['Modifica turbo','Edit turbo','Edytuj turbo','Labot turbo'],
+['Elimina motore','Delete engine','Usuń silnik','Dzēst dzinēju'],
+['Elimina turbo','Delete turbo','Usuń turbo','Dzēst turbo'],
+['Eliminare il motore {}?','Delete engine {1}?','Usunąć silnik {1}?','Dzēst dzinēju {1}?'],
+['Eliminare il turbo {}?','Delete turbo {1}?','Usunąć turbo {1}?','Dzēst turbo {1}?'],
+['Il motore e il suo storico vengono cancellati. Il turbo accoppiato torna a magazzino. Per tenerne traccia usa lo stato "Scartato".','The engine and its history are deleted. The paired turbo goes back to stock. To keep a record, use the "Scrapped" status.','Silnik i jego historia zostaną usunięte. Sparowane turbo wraca na magazyn. Aby zachować ślad, użyj stanu „Wycofany”.','Dzinējs un tā vēsture tiks dzēsti. Sapārotais turbo atgriežas noliktavā. Lai saglabātu ierakstu, izmanto statusu “Norakstīts”.'],
+['Il turbo e il suo storico vengono cancellati.','The turbo and its history are deleted.','Turbo i jego historia zostaną usunięte.','Turbo un tā vēsture tiks dzēsti.'],
+['Evento · motore {}','Event · engine {1}','Wydarzenie · silnik {1}','Notikums · dzinējs {1}'],
+['Motore # km · turbo # km','Engine {1} km · turbo {2} km','Silnik {1} km · turbo {2} km','Dzinējs {1} km · turbo {2} km'],
+['Motore # km','Engine {1} km','Silnik {1} km','Dzinējs {1} km'],
+['Nome evento','Event name','Nazwa wydarzenia','Notikuma nosaukums'],
+['Pilota','Driver','Kierowca','Pilots'],
+['Scegli o scrivi','Choose or type','Wybierz lub wpisz','Izvēlies vai raksti'],
+['Km percorsi','Km driven','Przejechane km','Nobrauktie km'],
+['Aggiungi i km anche al turbo {}','Also add the km to turbo {1}','Dodaj km także do turbo {1}','Pievienot km arī turbo {1}'],
+['Inserisci i km.','Enter the km.','Wpisz km.','Ievadi km.'],
+['# km aggiunti a motore e turbo','{1} km added to engine and turbo','Dodano {1} km do silnika i turbo','{1} km pievienoti dzinējam un turbo'],
+['# km aggiunti al motore','{1} km added to engine','Dodano {1} km do silnika','{1} km pievienoti dzinējam'],
+['# km aggiunti a {}','{1} km added to {2}','Dodano {1} km do {2}','{1} km pievienoti {2}'],
+['Cambia turbo · motore {}','Change turbo · engine {1}','Zmień turbo · silnik {1}','Mainīt turbo · dzinējs {1}'],
+['Accoppia turbo · motore {}','Pair turbo · engine {1}','Sparuj turbo · silnik {1}','Sapārot turbo · dzinējs {1}'],
+['Il turbo attuale','The current turbo','Obecne turbo','Pašreizējais turbo'],
+['(# km) torna a magazzino con i suoi km.','({1} km) goes back to stock with its km.','({1} km) wraca na magazyn ze swoimi km.','({1} km) atgriežas noliktavā ar saviem km.'],
+['Scegli un turbo libero da accoppiare al motore.','Choose a free turbo to pair with the engine.','Wybierz wolne turbo do sparowania z silnikiem.','Izvēlies brīvu turbo, ko sapārot ar dzinēju.'],
+['Il turbo tolto va','The removed turbo goes','Zdjęte turbo idzie','Noņemtais turbo dodas'],
+['Data','Date','Data','Datums'],
+['Scegli un turbo.','Choose a turbo.','Wybierz turbo.','Izvēlies turbo.'],
+['Turbo {} accoppiato','Turbo {1} paired','Turbo {1} sparowane','Turbo {1} sapārots'],
+['Turbo tolto','Turbo removed','Turbo zdjęte','Turbo noņemts'],
+['Accoppia turbo {}','Pair turbo {1}','Sparuj turbo {1}','Sapārot turbo {1}'],
+['Nessun motore a cui accoppiarlo','No engine to pair it with','Brak silnika do sparowania','Nav dzinēja, ar ko sapārot'],
+['Revisione · motore {}','Rebuild · engine {1}','Remont · silnik {1}','Remonts · dzinējs {1}'],
+['Azzera i km dalla revisione (ora # km). Il totale resta # km.','Resets km since rebuild (now {1} km). Total stays {2} km.','Zeruje km od remontu (teraz {1} km). Razem pozostaje {2} km.','Nonullē km kopš remonta (tagad {1} km). Kopā paliek {2} km.'],
+['Data revisione','Rebuild date','Data remontu','Remonta datums'],
+['Eseguita da','Done by','Wykonał','Veica'],
+['Officina, fornitore…','Workshop, supplier…','Warsztat, dostawca…','Darbnīca, piegādātājs…'],
+['Lavori eseguiti','Work done','Wykonane prace','Veiktie darbi'],
+['Registra revisione','Record rebuild','Zapisz remont','Reģistrēt remontu'],
+['Revisione registrata','Rebuild recorded','Remont zapisany','Remonts reģistrēts'],
+['Mandare in revisione il motore {}?','Send engine {1} to rebuild?','Wysłać silnik {1} do remontu?','Sūtīt dzinēju {1} uz remontu?'],
+['Il motore passa allo stato "In revisione".','The engine goes to "At rebuild" status.','Silnik przechodzi w stan „W remoncie”.','Dzinējs pāriet statusā “Remontā”.'],
+['Il turbo {} resta accoppiato: se va in revisione anche lui, cambialo da "Cambia turbo" o dal suo stato.','Turbo {1} stays paired: if it goes too, change it via "Change turbo" or its status.','Turbo {1} pozostaje sparowane: jeśli też idzie, zmień je przez „Zmień turbo” lub jego stan.','Turbo {1} paliek sapārots: ja arī tas jāsūta, maini to ar “Mainīt turbo” vai tā statusu.'],
+['Motore in revisione','Engine at rebuild','Silnik w remoncie','Dzinējs remontā'],
+['Storico motore {}','Engine history {1}','Historia silnika {1}','Dzinēja vēsture {1}'],
+['Storico turbo {}','Turbo history {1}','Historia turbo {1}','Turbo vēsture {1}'],
+['# km totali','{1} km total','razem {1} km','kopā {1} km'],
+['# km totali · # km dall’ultima revisione','{1} km total · {2} km since last rebuild','razem {1} km · {2} km od ostatniego remontu','kopā {1} km · {2} km kopš pēdējā remonta'],
+['# km totali · # km dall’ultima revisione (#/#/#)','{1} km total · {2} km since last rebuild ({3}/{4}/{5})','razem {1} km · {2} km od ostatniego remontu ({3}/{4}/{5})','kopā {1} km · {2} km kopš pēdējā remonta ({3}/{4}/{5})'],
+['Eventi','Events','Wydarzenia','Notikumi'],
+['Movimenti','Movements','Ruchy','Kustības'],
+['Nessun movimento.','No movements.','Brak ruchów.','Nav kustību.'],
+['(motore {})','(engine {1})','(silnik {1})','(dzinējs {1})'],
+['Correggi eventi','Fix events','Popraw wydarzenia','Labot notikumus'],
+['Correggi eventi · {}','Fix events · {1}','Popraw wydarzenia · {1}','Labot notikumus · {1}'],
+['Un evento per riga:','One event per line:','Jedno wydarzenie w wierszu:','Viens notikums rindā:'],
+['evento ; pilota ; km','event ; driver ; km','wydarzenie ; kierowca ; km','notikums ; pilots ; km'],
+['. Cancella una riga per togliere l’evento.','. Delete a line to remove the event.','. Usuń wiersz, aby usunąć wydarzenie.','. Izdzēs rindu, lai noņemtu notikumu.'],
+['Eventi aggiornati','Events updated','Wydarzenia zaktualizowane','Notikumi atjaunināti'],
+['Motore aggiunto','Engine added','Silnik dodany','Dzinējs pievienots'],
+['Motore aggiornato','Engine updated','Silnik zaktualizowany','Dzinējs atjaunināts'],
+['Motore eliminato','Engine deleted','Silnik usunięty','Dzinējs dzēsts'],
+['Turbo aggiunto','Turbo added','Turbo dodane','Turbo pievienots'],
+['Turbo aggiornato','Turbo updated','Turbo zaktualizowane','Turbo atjaunināts'],
+['Turbo eliminato','Turbo deleted','Turbo usunięte','Turbo dzēsts'],
+['Esiste già un motore con SN {}.','An engine with SN {1} already exists.','Silnik o SN {1} już istnieje.','Dzinējs ar SN {1} jau eksistē.'],
+['Esiste già un turbo con SN {}.','A turbo with SN {1} already exists.','Turbo o SN {1} już istnieje.','Turbo ar SN {1} jau eksistē.'],
+// storico movimenti (salvati in italiano)
+['Inserito a magazzino','Added to stock','Dodano na magazyn','Pievienots noliktavā'],
+['Inserito a magazzino con turbo {}','Added to stock with turbo {1}','Dodano na magazyn z turbo {1}','Pievienots noliktavā ar turbo {1}'],
+['Inserito a magazzino e accoppiato al motore {}','Added to stock and paired to engine {1}','Dodano na magazyn i sparowano z silnikiem {1}','Pievienots noliktavā un sapārots ar dzinēju {1}'],
+['Accoppiato al motore {}','Paired to engine {1}','Sparowano z silnikiem {1}','Sapārots ar dzinēju {1}'],
+['Accoppiato al motore {} a # km','Paired to engine {1} at {2} km','Sparowano z silnikiem {1} przy {2} km','Sapārots ar dzinēju {1} pie {2} km'],
+['Tolto dal motore {} a # km','Removed from engine {1} at {2} km','Zdjęto z silnika {1} przy {2} km','Noņemts no dzinēja {1} pie {2} km'],
+['Turbo {} montato','Turbo {1} fitted','Zamontowano turbo {1}','Uzstādīts turbo {1}'],
+['Turbo {} montato (tolto {})','Turbo {1} fitted ({2} removed)','Zamontowano turbo {1} (zdjęto {2})','Uzstādīts turbo {1} (noņemts {2})'],
+['Turbo {} tolto (spostato sul motore {})','Turbo {1} removed (moved to engine {2})','Turbo {1} zdjęte (przeniesione na silnik {2})','Turbo {1} noņemts (pārvietots uz dzinēju {2})'],
+['Revisionato a # km (# km dalla precedente)','Rebuilt at {1} km ({2} km since previous)','Wyremontowany przy {1} km ({2} km od poprzedniego)','Izremontēts pie {1} km ({2} km kopš iepriekšējā)'],
+['Inviato in revisione a # km','Sent to rebuild at {1} km','Wysłany do remontu przy {1} km','Nosūtīts uz remontu pie {1} km'],
+// gomme
+['Nuovo set','New set','Nowy komplet','Jauns komplekts'],
+['Cerca set o FIA code','Search set or FIA code','Szukaj kompletu lub kodu FIA','Meklēt komplektu vai FIA kodu'],
+['Slick','Slick','Slick','Slick'],
+['Wet','Wet','Deszczowe','Lietus'],
+['# in magazzino · # X','{1} in stock · {2} X','{1} na magazynie · {2} X','{1} noliktavā · {2} X'],
+['In magazzino','In stock','Na magazynie','Noliktavā'],
+['Nessun set di gomme','No tyre sets','Brak kompletów opon','Nav riepu komplektu'],
+['Aggiungi il primo set con «Nuovo set».','Add the first set with “New set”.','Dodaj pierwszy komplet przyciskiem „Nowy komplet”.','Pievieno pirmo komplektu ar “Jauns komplekts”.'],
+['Nessun set trovato.','No sets found.','Nie znaleziono kompletów.','Komplekti nav atrasti.'],
+['Nessun set slick.','No slick sets.','Brak kompletów slick.','Nav slick komplektu.'],
+['Nessun set wet.','No wet sets.','Brak kompletów deszczowych.','Nav lietus komplektu.'],
+['Set {}','Set {1}','Komplet {1}','Komplekts {1}'],
+['FIA code','FIA code','Kod FIA','FIA kods'],
+['Ultimi eventi','Latest events','Ostatnie wydarzenia','Pēdējie notikumi'],
+['Nessun evento.','No events.','Brak wydarzeń.','Nav notikumu.'],
+['Elimina','Delete','Usuń','Dzēst'],
+['Segna X','Mark X','Oznacz X','Atzīmēt X'],
+['Rimetti in magazzino','Back in stock','Przywróć na magazyn','Atpakaļ noliktavā'],
+['Chiudi','Close','Zamknij','Aizvērt'],
+['Ant. sx','Front L','Przód L','Priekšā K'],
+['Ant. dx','Front R','Przód P','Priekšā L'],
+['Post. sx','Rear L','Tył L','Aizmugurē K'],
+['Post. dx','Rear R','Tył P','Aizmugurē L'],
+['Nuovo set gomme','New tyre set','Nowy komplet opon','Jauns riepu komplekts'],
+['Modifica set {}','Edit set {1}','Edytuj komplet {1}','Labot komplektu {1}'],
+['Codice set','Set code','Kod kompletu','Komplekta kods'],
+['Tipo','Type','Typ','Tips'],
+['X (scartato)','X (scrapped)','X (wycofany)','X (norakstīts)'],
+['Km per evento','Km per event','Km na wydarzenie','Km par notikumu'],
+['Un evento per riga: nome evento e km. I km totali sono la somma.','One event per line: event name and km. Total km is the sum.','Jedno wydarzenie w wierszu: nazwa i km. Razem km to suma.','Viens notikums rindā: nosaukums un km. Kopējie km ir summa.'],
+['FIA code (facoltativi)','FIA codes (optional)','Kody FIA (opcjonalnie)','FIA kodi (neobligāti)'],
+['Elimina set','Delete set','Usuń komplet','Dzēst komplektu'],
+['Annulla','Cancel','Anuluj','Atcelt'],
+['Salva','Save','Zapisz','Saglabāt'],
+['Eliminare il set {}?','Delete set {1}?','Usunąć komplet {1}?','Dzēst komplektu {1}?'],
+['Il set viene tolto dal magazzino.','The set is removed from the store.','Komplet zostanie usunięty z magazynu.','Komplekts tiks izņemts no noliktavas.'],
+['Evento · set {}','Event · set {1}','Wydarzenie · komplet {1}','Notikums · komplekts {1}'],
+['Km attuali: #','Current km: {1}','Obecne km: {1}','Pašreizējie km: {1}'],
+['Evento','Event','Wydarzenie','Notikums'],
+['Km','Km','Km','Km'],
+['Set aggiunto','Set added','Komplet dodany','Komplekts pievienots'],
+['Set aggiornato','Set updated','Komplet zaktualizowany','Komplekts atjaunināts'],
+['Set eliminato','Set deleted','Komplet usunięty','Komplekts dzēsts'],
+['{} segnato X','{1} marked X','{1} oznaczony X','{1} atzīmēts ar X'],
+['{} rimesso in magazzino','{1} back in stock','{1} wrócił na magazyn','{1} atpakaļ noliktavā'],
+['Esiste già un set {}.','Set {1} already exists.','Komplet {1} już istnieje.','Komplekts {1} jau eksistē.'],
+['Il FIA code {} è già nel set {}.','FIA code {1} is already in set {2}.','Kod FIA {1} jest już w komplecie {2}.','FIA kods {1} jau ir komplektā {2}.'],
+['Il FIA code {} è inserito due volte.','FIA code {1} is entered twice.','Kod FIA {1} wpisano dwa razy.','FIA kods {1} ievadīts divreiz.'],
+// impostazioni
+['Limiti km','Km limits','Limity km','Km limiti'],
+['Revisione ogni','Rebuild every','Remont co','Remonts ik pēc'],
+['Vita massima','Max life','Maks. żywotność','Maks. mūžs'],
+['Km performance','Performance km','Km osiągów','Veiktspējas km'],
+['Da cambiare a','Replace at','Wymiana przy','Maiņa pie'],
+['Motore: giallo al #% del limite, rosso al #%. Turbo: giallo oltre i km di performance, rosso ai km di cambio. I turbo non hanno revisione.','Engine: yellow at {1}% of the limit, red at {2}%. Turbo: yellow past the performance km, red at the change km. Turbos have no rebuild.','Silnik: żółty przy {1}% limitu, czerwony przy {2}%. Turbo: żółty po km osiągów, czerwony przy km wymiany. Turbo nie ma remontu.','Dzinējs: dzeltens pie {1}% no limita, sarkans pie {2}%. Turbo: dzeltens pēc veiktspējas km, sarkans pie maiņas km. Turbo nav remonta.'],
+['Modifica limiti','Edit limits','Edytuj limity','Labot limitus'],
+['Piloti / vetture','Drivers / cars','Kierowcy / auta','Piloti / auto'],
+['Compaiono come suggerimenti nel campo Pilota quando aggiungi un evento a un motore.','They are suggested in the Driver field when you add an event to an engine.','Pojawiają się jako podpowiedzi w polu Kierowca przy dodawaniu wydarzenia do silnika.','Tie tiek ieteikti laukā Pilots, kad pievieno notikumu dzinējam.'],
+['Nessun pilota inserito.','No drivers yet.','Brak kierowców.','Nav neviena pilota.'],
+['Modifica elenco','Edit list','Edytuj listę','Labot sarakstu'],
+['Uso in due','Shared use','Wspólne użycie','Kopīga lietošana'],
+['I dati sono condivisi e si aggiornano in tempo reale. Per far lavorare un’altra persona, condividi la pagina dal menu Condividi con il ruolo Collaboratore.','Data is shared and updates live. To let someone else work on it, share the page from the Share menu with the Collaborator role.','Dane są wspólne i aktualizują się na żywo. Aby ktoś inny mógł pracować, udostępnij stronę z menu Udostępnij z rolą Współpracownik.','Dati ir kopīgi un atjaunojas tiešsaistē. Lai cits varētu strādāt, kopīgo lapu izvēlnē Kopīgot ar lomu Līdzstrādnieks.'],
+['Revisione ogni (km)','Rebuild every (km)','Remont co (km)','Remonts ik pēc (km)'],
+['Vita massima (km)','Max life (km)','Maks. żywotność (km)','Maks. mūžs (km)'],
+['Km suggeriti per la performance','Suggested km for performance','Zalecane km dla osiągów','Ieteicamie km veiktspējai'],
+['Da cambiare a (km)','Replace at (km)','Wymiana przy (km)','Maiņa pie (km)'],
+['Avvisi motore','Engine warnings','Ostrzeżenia silnika','Dzinēja brīdinājumi'],
+['Avviso giallo al (% del limite)','Yellow warning at (% of limit)','Żółte ostrzeżenie przy (% limitu)','Dzeltens brīdinājums pie (% no limita)'],
+['Limiti aggiornati','Limits updated','Limity zaktualizowane','Limiti atjaunināti'],
+['Uno per riga.','One per line.','Jeden w wierszu.','Pa vienam rindā.'],
+['Elenco','List','Lista','Saraksts'],
+['Elenco aggiornato','List updated','Lista zaktualizowana','Saraksts atjaunināts'],
+// errori
+['Compila il campo "{}".','Fill in the "{1}" field.','Wypełnij pole „{1}”.','Aizpildi lauku “{1}”.'],
+['Operazione non riuscita.','Operation failed.','Operacja nie powiodła się.','Darbība neizdevās.'],
+['Salvataggio non riuscito. Controlla la connessione e riprova.','Save failed. Check the connection and try again.','Zapis nie powiódł się. Sprawdź połączenie i spróbuj ponownie.','Saglabāšana neizdevās. Pārbaudi savienojumu un mēģini vēlreiz.'],
+['Salvataggio non riuscito. Riprova.','Save failed. Try again.','Zapis nie powiódł się. Spróbuj ponownie.','Saglabāšana neizdevās. Mēģini vēlreiz.'],
+['Non hai i permessi per modificare il magazzino. Chiedi al proprietario l’accesso come Collaboratore.','You do not have permission to edit the store. Ask the owner for Collaborator access.','Nie masz uprawnień do edycji magazynu. Poproś właściciela o dostęp Współpracownika.','Tev nav tiesību labot noliktavu. Palūdz īpašniekam līdzstrādnieka piekļuvi.'],
+['Apri la pagina da claude.ai, con l’accesso effettuato, per vedere e modificare i dati.','Open the page from claude.ai, signed in, to view and edit the data.','Otwórz stronę z claude.ai po zalogowaniu, aby przeglądać i edytować dane.','Atver lapu no claude.ai, pieslēdzies, lai skatītu un labotu datus.'],
+['Accedi a claude.ai con un account che ha accesso a questa pagina.','Sign in to claude.ai with an account that has access to this page.','Zaloguj się do claude.ai kontem z dostępem do tej strony.','Pieslēdzies claude.ai ar kontu, kam ir piekļuve šai lapai.'],
+['Accesso','Access','Dostęp','Piekļuve'],
+['Chiunque abbia il link può vedere e modificare il magazzino. I dati sono condivisi e si aggiornano in tempo reale su tutti i telefoni.','Anyone with the link can view and edit the store. Data is shared and updates live on every phone.','Każdy, kto ma link, może przeglądać i edytować magazyn. Dane są wspólne i aktualizują się na żywo na każdym telefonie.','Ikviens ar saiti var skatīt un labot noliktavu. Dati ir kopīgi un atjaunojas tiešsaistē visos tālruņos.'],
+['Backup','Backup','Kopia zapasowa','Rezerves kopija'],
+['Scarica una copia di tutti i dati, oppure carica un file di backup (per esempio','Download a copy of all data, or upload a backup file (for example','Pobierz kopię wszystkich danych lub wgraj plik kopii (na przykład','Lejupielādē visu datu kopiju vai augšupielādē rezerves failu (piemēram,'],
+['). Il caricamento sovrascrive i documenti con lo stesso codice e non cancella gli altri.','). Uploading overwrites items with the same code and does not delete the others.','). Wgranie nadpisuje pozycje o tym samym kodzie i nie usuwa pozostałych.','). Augšupielāde pārraksta ierakstus ar to pašu kodu un nedzēš pārējos.'],
+['Scarica backup','Download backup','Pobierz kopię','Lejupielādēt kopiju'],
+['Carica backup','Upload backup','Wgraj kopię','Augšupielādēt kopiju'],
+['Caricare il backup?','Upload the backup?','Wgrać kopię?','Augšupielādēt kopiju?'],
+['# documenti tra motori, turbo e gomme. Quelli con lo stesso codice vengono sovrascritti.','{1} items across engines, turbos and tyres. Those with the same code are overwritten.','{1} pozycji: silniki, turbo i opony. Te o tym samym kodzie zostaną nadpisane.','{1} ieraksti: dzinēji, turbo un riepas. Ieraksti ar to pašu kodu tiks pārrakstīti.'],
+['Carica','Upload','Wgraj','Augšupielādēt'],
+['Backup caricato','Backup uploaded','Kopia wgrana','Kopija augšupielādēta'],
+['File non valido','Invalid file','Nieprawidłowy plik','Nederīgs fails'],
+['Il file non contiene dati del magazzino','The file has no store data','Plik nie zawiera danych magazynu','Failā nav noliktavas datu'],
+['Offline · le modifiche partono appena torna la rete','Offline · changes sync when back online','Offline · zmiany wyślą się po powrocie sieci','Bezsaistē · izmaiņas nosūtīs, kad būs tīkls'],
+['Non riesco a caricare Firebase: controlla la connessione e ricarica.','Cannot load Firebase: check the connection and reload.','Nie można załadować Firebase: sprawdź połączenie i odśwież.','Nevar ielādēt Firebase: pārbaudi savienojumu un pārlādē.'],
+['Manca la configurazione Firebase: incolla i tuoi dati nel file config.js (vedi LEGGIMI).','Firebase setup missing: paste your details in config.js (see LEGGIMI).','Brak konfiguracji Firebase: wklej dane do config.js (zob. LEGGIMI).','Trūkst Firebase iestatījumu: ielīmē datus failā config.js (sk. LEGGIMI).'],
+['Il database rifiuta l’accesso: controlla le regole di Firestore (vedi LEGGIMI).','The database refuses access: check the Firestore rules (see LEGGIMI).','Baza odmawia dostępu: sprawdź reguły Firestore (zob. LEGGIMI).','Datubāze liedz piekļuvi: pārbaudi Firestore noteikumus (sk. LEGGIMI).'],
+];
+const LI={it:0,en:1,pl:2,lv:3};
+const NUM=/\d+(?:[.,]\d+)*/g;
+const TX={},TP=[];
+for(const r of TR){if(r[0].includes('{}'))TP.push({re:new RegExp('^'+r[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\\\{\\\}/g,'(.+?)').replace(/#/g,'(\\d+(?:[.,]\\d+)*)')+'$'),r});else TX[r[0]]=r}
+let LANG='it';try{LANG=localStorage.getItem('mg_lang')||'it'}catch(e){}
+if(!(LANG in LI))LANG='it';
+const fill=(t,v)=>t.replace(/\{(\d)\}/g,(_,i)=>v[i-1]??'');
+function trCore(s){
+  if(LANG==='it'||!s)return s;const i=LI[LANG];
+  let r=TX[s];if(r)return r[i];
+  const nums=s.match(NUM);
+  if(nums){r=TX[s.replace(NUM,'#')];if(r)return fill(r[i],nums)}
+  for(const p of TP){const m=s.match(p.re);if(m)return fill(p.r[i],m.slice(1))}
+  return null;
+}
+function tr(s){
+  if(LANG==='it'||s==null)return s;
+  const m=String(s).match(/^(\s*)([\s\S]*?)(\s*\*?\s*)$/);const core=m[2];
+  const t=trCore(core);return t==null?s:m[1]+t+m[3];
+}
+const ORIG=new WeakMap();
+function trTree(root){
+  if(!root)return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+  while(n=w.nextNode()){const p=n.parentElement;if(!p||p.closest('script,style,textarea,[data-notr]'))continue;
+    if(!ORIG.has(n))ORIG.set(n,n.nodeValue);const o=ORIG.get(n);const t=LANG==='it'?o:tr(o);if(n.nodeValue!==t)n.nodeValue=t}
+  const els=root.querySelectorAll?root.querySelectorAll('[placeholder],[aria-label],[title]'):[];
+  for(const e of [root.nodeType===1?root:null,...els]){if(!e||!e.getAttribute||e.closest('[data-notr]'))continue;
+    for(const a of ['placeholder','aria-label','title']){const v=e.getAttribute(a);if(v==null)continue;
+      const k='data-o-'+a;if(!e.hasAttribute(k))e.setAttribute(k,v);const o=e.getAttribute(k);const t=LANG==='it'?o:tr(o);if(v!==t)e.setAttribute(a,t)}}
+}
+const trObs=new MutationObserver(recs=>{
+  for(const r of recs){if(r.type==='characterData'){const n=r.target;ORIG.set(n,n.nodeValue);if(n.parentElement)trTree(n.parentElement)}
+    else r.addedNodes.forEach(n=>{if(n.nodeType===3){ORIG.delete(n);if(n.parentElement)trTree(n.parentElement)}else if(n.nodeType===1)trTree(n)})}
+  trObs.takeRecords();
+});
+function applyLang(){
+  document.documentElement.lang=LANG;
+  const h=document.querySelector('.ttl');if(h){h.innerHTML=TITLES[LANG];document.title=h.textContent}
+  const lb=$('#langBtn');if(lb)lb.textContent=LANGS.find(l=>l[0]===LANG)[1];
+  trTree(document.body);trObs.takeRecords();
+}
+function setLang(l){LANG=l;try{localStorage.setItem('mg_lang',l)}catch(e){}render();applyLang()}
+
+let tt;function toast(m){const el=$('#toast');el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2800)}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML=''}
+$('#modal').addEventListener('click',e=>{const lg=e.target.closest('[data-lang]');if(lg){closeModal();setLang(lg.dataset.lang);return}if(e.target.id==='modal'||e.target.closest('[data-close]')){closeModal();return}const b=e.target.closest('[data-act]');if(b&&ACT[b.dataset.act]){closeModal();ACT[b.dataset.act](b.dataset.id)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').hidden)closeModal()});
+function fieldHtml(f){
+  if(f.type==='sep')return `<div class="sep">${esc(f.label)}</div>`;
+  const id='f_'+f.id,v=f.value??'';
+  if(f.type==='check')return `<div class="fld check${f.full?' full':''}"><input id="${id}" name="${f.id}" type="checkbox"${v?' checked':''}><label for="${id}">${esc(f.label)}</label></div>`;
+  const lab=`<label for="${id}">${esc(f.label)}${f.required?' *':''}</label>`;
+  let ctl;
+  if(f.type==='select')ctl=`<select id="${id}" name="${f.id}">${f.options.map(o=>`<option value="${esc(o.v)}"${String(o.v)===String(v)?' selected':''}>${esc(o.l)}</option>`).join('')}</select>`;
+  else if(f.type==='textarea')ctl=`<textarea id="${id}" name="${f.id}" placeholder="${esc(f.ph||'')}">${esc(v)}</textarea>`;
+  else ctl=`<input id="${id}" name="${f.id}" type="${f.type||'text'}" value="${esc(v)}"${f.type==='number'?' inputmode="decimal" step="any" min="0"':''}${f.scan?' data-scan="1"':''}${f.list?` list="${id}_l"`:''} placeholder="${esc(f.ph||'')}" autocomplete="off">${f.list?`<datalist id="${id}_l">${f.list.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`;
+  return `<div class="fld${f.full?' full':''}">${lab}${ctl}${f.hint?`<span class="hint">${esc(f.hint)}</span>`:''}</div>`;
+}
+function openForm({title,intro,fields,submit='Salva',onSubmit,danger}){
+  const m=$('#modal');
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><h3 id="mt">${esc(title)}</h3>${intro?`<p class="muted" style="margin:0">${intro}</p>`:''}<form id="mf" novalidate><div class="grid2">${fields.map(fieldHtml).join('')}</div><p class="ferr" id="ferr" hidden></p><div class="acts" style="margin-top:14px">${danger?`<button type="button" class="btn danger grow" id="mdanger">${esc(danger.label)}</button>`:''}<button type="button" class="btn" data-close>Annulla</button><button class="btn primary" type="submit">${esc(submit)}</button></div></form></div>`;
+  m.hidden=false;
+  const first=m.querySelector('input,select,textarea');first&&first.focus();
+  const form=$('#mf');
+  /* lettore di codici a barre: Invio passa al campo successivo invece di salvare */
+  const scans=[...form.querySelectorAll('[data-scan]')];
+  scans.forEach((el,i)=>el.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const n=scans[i+1];if(n){n.focus();n.select()}else el.blur()}));
+  if(danger)$('#mdanger').onclick=()=>{closeModal();danger.run()};
+  form.onsubmit=async e=>{
+    e.preventDefault();const v={};
+    fields.forEach(f=>{if(f.type==='sep')return;const el=form.elements[f.id];if(!el)return;v[f.id]=f.type==='check'?el.checked:el.value.trim()});
+    const miss=fields.find(f=>f.required&&!v[f.id]);const er=$('#ferr');
+    if(miss){er.textContent='Compila il campo "'+miss.label+'".';er.hidden=false;return}
+    const btn=form.querySelector('[type=submit]');btn.disabled=true;
+    try{await onSubmit(v);closeModal()}catch(x){er.textContent=x.message||'Salvataggio non riuscito. Riprova.';er.hidden=false;btn.disabled=false}
+  };
+  return form;
+}
+function confirmBox(title,text,label,fn){
+  const m=$('#modal');
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><p style="margin:0">${text}</p><p class="ferr" id="ferr" hidden></p><div class="acts"><button class="btn" data-close>Annulla</button><button class="btn primary" id="cy">${esc(label)}</button></div></div>`;
+  m.hidden=false;$('#cy').focus();
+  $('#cy').onclick=async()=>{$('#cy').disabled=true;try{await fn();closeModal()}catch(x){const e=$('#ferr');e.textContent=x.message||'Operazione non riuscita.';e.hidden=false;$('#cy').disabled=false}};
+}
+
+/* ---------- db ---------- */
+const col=n=>S.db.collection(n);
+const upd=(n,id,d)=>col(n).doc(id).update(d);
+const add=(n,d)=>col(n).add(d);
+const del=(n,id)=>col(n).doc(id).delete();
+async function run(fn){try{return await fn()}catch(e){
+  if(e&&e.message&&!e.code)throw e;
+  if(e&&(e.code==='permission_denied'||e.code==='not_granted'))throw new Error('Non hai i permessi per modificare il magazzino. Chiedi al proprietario l’accesso come Collaboratore.');
+  throw new Error('Salvataggio non riuscito. Controlla la connessione e riprova.')}}
+const saveCfg=d=>S.db.doc('config/main').set({...S.cfg,...d});
+
+/* ---------- render ---------- */
+function setTab(k){S.tab=k;store.set('mg_tab',k);render();window.scrollTo(0,0)}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)setTab(b.dataset.tab)});
+function render(){
+  document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===S.tab?'page':'false'));
+  if(S.blocked){$('#main').innerHTML=`<div class="panel empty"><strong>Magazzino non raggiungibile</strong><span>${esc(S.blocked)}</span></div>`;return}
+  if(!S.db)return;
+  const v={motori:vEngines,gomme:vTires,impostazioni:vSettings}[S.tab]();
+  const fab=$('#fab'),fk=W()&&{motori:'Nuovo',gomme:'Nuovo set'}[S.tab];fab.hidden=!fk;if(fk)$('#fabTxt').textContent=fk;
+  $('#main').innerHTML=(S.ro?`<div class="banner">Puoi consultare il magazzino ma non modificarlo. Chiedi al proprietario l’accesso come Collaboratore.</div>`:'')+v;
+}
+
+$('#langBtn').addEventListener('click',()=>{const m=$('#modal');
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Lingua"><h3>Lingua · Language</h3><div class="langs" data-notr>${LANGS.map(l=>`<button class="btn${l[0]===LANG?' on':''}" data-lang="${l[0]}">${l[2]}</button>`).join('')}</div><div class="acts"><button class="btn" data-close>Chiudi</button></div></div>`;m.hidden=false});
+$('#fab').addEventListener('click',()=>{
+  if(S.tab==='gomme')return tireForm();
+  const m=$('#modal');m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Aggiungi"><h3>Aggiungi</h3><div class="choice"><button class="btn primary" data-act="newEng">Nuovo motore</button><button class="btn primary" data-act="newTur">Nuovo turbo</button><button class="btn" data-close>Annulla</button></div></div>`;m.hidden=false});
+new MutationObserver(()=>{const el=$('#status');el.classList.toggle('ok',el.textContent==='Aggiornato in tempo reale'||el.textContent===tr('Aggiornato in tempo reale'))}).observe($('#status'),{childList:true,characterData:true,subtree:true});
+/* ===== MOTORI E TURBO ===== */
+function engRow(e){
+  const h=health(e,'eng'),t=turById(e.turboId);
+  const acts=(e.status!=='scartato'?B('engEvent',e.id,'+ Evento','primary')+B('swapTurbo',e.id,t?'Cambia turbo':'Accoppia turbo'):'')
+    +(e.status==='disponibile'?B('toRev',e.id,'In revisione'):'')+(e.status!=='scartato'?B('engRevDone',e.id,'Revisionato'):'')
+    +B('editEng',e.id,'Modifica','link')+`<button class="btn sm link" data-act="logEng" data-id="${esc(e.id)}">Storico</button>`;
+  return `<div class="row solo lvl-${h.lvl}">
+    <div style="min-width:0"><div class="name"><span class="sn">${esc(e.serial||'—')}</span></div>
+      <div class="subl">${stChip(e)}<span>${t?'Turbo <span class="mono">'+esc(t.serial||'—')+'</span>':'Senza turbo'}</span>${e.notes?`<span>${esc(e.notes)}</span>`:''}</div></div>
+    <div class="bars"><div class="tot">Totale <b>${fmt(kmTot(e))} km</b> · ${evs(e).length===1?'1 evento':evs(e).length+' eventi'}${lastEv(e)}</div>${h.L.map(bar).join('')||`<span class="muted" style="font-size:12px">Nessun limite impostato</span>`}</div>
+    <div class="side">${chip(h)}<div class="btns">${acts}</div></div>
+  </div>`;
+}
+const lastEv=x=>{const e=evs(x)[evs(x).length-1];return e?` · ultimo: <span class="mono">${esc(e.ev)}</span>${e.pilot?' ('+esc(e.pilot)+')':''}`:''};
+function turRow(t){
+  const h=health(t,'tur'),e=engOfTurbo(t);
+  const acts=(t.status!=='scartato'?B('pairTurbo',t.id,e?'Cambia motore':'Accoppia a motore',e?'':'primary'):'')+B('editTur',t.id,'Modifica','link')+`<button class="btn sm link" data-act="logTur" data-id="${esc(t.id)}">Storico</button>`;
+  return `<div class="row solo lvl-${h.lvl}">
+    <div style="min-width:0"><div class="name"><span class="sn">${esc(t.serial||'—')}</span></div><div class="subl">${stChip(t)}<span>${e?'Sul motore <span class="mono">'+esc(e.serial||'—')+'</span>':'Non accoppiato'}</span>${t.notes?`<span>${esc(t.notes)}</span>`:''}</div></div>
+    <div class="bars"><div class="tot">Totale <b>${fmt(kmTot(t))} km</b>${lastEv(t)}</div>${h.L.map(bar).join('')||`<span class="muted" style="font-size:12px">Nessun limite impostato</span>`}</div>
+    <div class="side">${chip(h)}<div class="btns">${acts}</div></div>
+  </div>`;
+}
+function vEngines(){
+  const live=x=>S.showOld||x.status!=='scartato';
+  const bySn=(a,b)=>(a.status==='scartato')-(b.status==='scartato')||String(a.serial).localeCompare(String(b.serial),undefined,{numeric:true});
+  const engs=S.eng.filter(live).sort(bySn),turs=S.tur.filter(live).sort(bySn);
+  const all=[...S.eng.filter(x=>x.status!=='scartato').map(x=>health(x,'eng')),...S.tur.filter(x=>x.status!=='scartato').map(x=>health(x,'tur'))];
+  const nb=all.filter(h=>h.lvl==='bad').length,nw=all.filter(h=>h.lvl==='warn').length;
+  let out=`<div class="sechead"><h2 class="sec">Motori e turbo</h2></div>`;
+  out+=`<div class="kpis"><div class="kpi"><span class="n">${S.eng.filter(x=>x.status!=='scartato').length}</span><span class="l">Motori</span></div><div class="kpi"><span class="n">${S.tur.filter(x=>x.status!=='scartato').length}</span><span class="l">Turbo</span></div><div class="kpi ${nb?'bad':''}"><span class="n">${nb}</span><span class="l">Da revisionare</span></div><div class="kpi ${nw?'warn':''}"><span class="n">${nw}</span><span class="l">In avvicinamento</span></div></div>`;
+  out+=`<div class="filters"><label class="muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="showOld" data-filter="old" style="width:auto"${S.showOld?' checked':''}> Mostra anche scartati</label><span class="muted">Limiti: motore rev. ${fmt(S.cfg.engRevKm)} / vita ${fmt(S.cfg.engLifeKm)} km${` · turbo performance ${fmt(S.cfg.turPerfKm)} / cambio ${fmt(S.cfg.turLifeKm)} km`}${W()?' · <button class="btn sm link" data-act="goSettings">cambia</button>':''}</span></div>`;
+  out+=`<section class="grp"><div class="sechead"><h3 class="sub">Motori (${engs.length})</h3>${W()?`<button class="btn primary inl" data-act="newEng">Nuovo motore</button>`:''}</div>`
+    +(engs.length?`<div class="panel list">${engs.map(engRow).join('')}</div>`:`<div class="panel empty"><span>Nessun motore registrato.</span></div>`)+`</section>`;
+  out+=`<section class="grp"><div class="sechead"><h3 class="sub">Turbo (${turs.length})</h3>${W()?`<button class="btn primary inl" data-act="newTur">Nuovo turbo</button>`:''}</div>`
+    +(turs.length?`<div class="panel list">${turs.map(turRow).join('')}</div>`:`<div class="panel empty"><span>Nessun turbo registrato.</span></div>`)+`</section>`;
+  return out;
+}
+const pilotField=(v,label)=>({id:'pilot',label:label||'Pilota / vettura',type:'select',options:[{v:'',l:'— nessuno —'},...pilots().map(p=>({v:p,l:p})),...(v&&!pilots().includes(v)?[{v,l:v}]:[])],value:v||''});
+const freeTurbos=except=>S.tur.filter(t=>t.status!=='scartato'&&!engOfTurbo(t)||(except&&t.id===except));
+const turOpt=t=>({v:t.id,l:`${t.serial||'—'} · ${fmt(kmTot(t))} km${t.status==='revisione'?' · in revisione':''}`});
+function dupSerial(list,sn,selfId){return list.some(x=>x.id!==selfId&&norm(x.serial)===norm(sn))}
+
+function engForm(e){
+  const fields=[
+    {id:'serial',label:'Numero motore (SN)',value:e?.serial,required:true},
+    {id:'kmStart',label:'Km già percorsi',type:'number',value:e?.kmStart??0,hint:'Km del motore prima di registrarlo qui'},
+    {id:'kmRev0',label:'Km dall’ultima revisione',type:'number',value:e?kmRev(e):0},
+    {id:'status',label:'Stato',type:'select',options:Object.entries(ESTAT).map(([v,l])=>({v,l})),value:e?.status||'disponibile'},
+    {id:'notes',label:'Note',value:e?.notes}];
+  if(!e)fields.push({type:'sep',label:'Turbo accoppiato'},
+    {id:'turSel',label:'Turbo già a magazzino',type:'select',full:true,options:[{v:'',l:'— nessuno / nuovo turbo qui sotto —'},...freeTurbos().map(turOpt)]},
+    {id:'turSn',label:'Oppure nuovo turbo: SN',ph:'lascia vuoto se non serve'},{id:'turKm',label:'Km già percorsi dal turbo',type:'number',value:0});
+  openForm({title:e?'Modifica motore':'Nuovo motore',fields,
+    danger:e?{label:'Elimina motore',run:()=>confirmBox('Eliminare il motore '+esc(e.serial)+'?','Il motore e il suo storico vengono cancellati. Il turbo accoppiato torna a magazzino. Per tenerne traccia usa lo stato "Scartato".','Elimina',()=>run(async()=>{await del('eng',e.id);toast('Motore eliminato')}))}:null,
+    onSubmit:v=>run(async()=>{
+      if(dupSerial(S.eng,v.serial,e?.id))throw new Error('Esiste già un motore con SN '+v.serial+'.');
+      const start=num(v.kmStart),tot=e?num(v.kmStart)+evs(e).reduce((a,x)=>a+num(x.km),0):start;
+      const d={serial:v.serial,kmStart:start,revAt:Math.max(0,tot-num(v.kmRev0)),status:v.status,notes:v.notes};
+      if(e){await upd('eng',e.id,d);toast('Motore aggiornato');return}
+      let turboId=v.turSel||'';
+      if(!turboId&&v.turSn){if(dupSerial(S.tur,v.turSn))throw new Error('Esiste già un turbo con SN '+v.turSn+'.');
+        const tk=num(v.turKm);const r=await add('tur',{serial:v.turSn,kmStart:tk,events:[],status:'disponibile',notes:'',log:[{d:today(),t:'Inserito a magazzino e accoppiato al motore '+v.serial}]});turboId=r.id}
+      else if(turboId){const t=turById(turboId);await upd('tur',turboId,{log:logPush(t,'Accoppiato al motore '+v.serial)})}
+      await add('eng',{...d,events:[],turboId,log:[{d:today(),t:'Inserito a magazzino'+(turboId?' con turbo '+(turById(turboId)?.serial||v.turSn):'')}]});
+      toast('Motore aggiunto')})});
+}
+function turForm(t){
+  openForm({title:t?'Modifica turbo':'Nuovo turbo',fields:[
+    {id:'serial',label:'Numero turbo (SN)',value:t?.serial,required:true},
+    {id:'status',label:'Stato',type:'select',options:Object.entries(TSTAT).map(([v,l])=>({v,l})),value:t?.status==='scartato'?'scartato':'disponibile'},
+    {id:'kmStart',label:'Km già percorsi',type:'number',value:t?.kmStart??0,full:true,hint:'Km del turbo prima di registrarlo qui'},
+    {id:'notes',label:'Note',full:true,value:t?.notes}],
+    danger:t?{label:'Elimina turbo',run:()=>confirmBox('Eliminare il turbo '+esc(t.serial)+'?','Il turbo e il suo storico vengono cancellati.','Elimina',()=>run(async()=>{const e=engOfTurbo(t);if(e)await upd('eng',e.id,{turboId:''});await del('tur',t.id);toast('Turbo eliminato')}))}:null,
+    onSubmit:v=>run(async()=>{
+      if(dupSerial(S.tur,v.serial,t?.id))throw new Error('Esiste già un turbo con SN '+v.serial+'.');
+      const start=num(v.kmStart),tot=start+(t?evs(t).reduce((a,x)=>a+num(x.km),0):0);
+      const d={serial:v.serial,status:v.status,kmStart:start,notes:v.notes};
+      if(t)await upd('tur',t.id,d);else await add('tur',{...d,events:[],log:[{d:today(),t:'Inserito a magazzino'}]});
+      toast(t?'Turbo aggiornato':'Turbo aggiunto')})});
+}
+function engEventForm(e){
+  const t=turById(e.turboId);
+  const fields=[{id:'ev',label:'Nome evento',required:true,full:true,ph:'20261012_PT_MUG'},{id:'pilot',label:'Pilota',list:pilots(),ph:'Scegli o scrivi'},{id:'km',label:'Km percorsi',type:'number',required:true}];
+  if(t)fields.push({id:'both',label:'Aggiungi i km anche al turbo '+(t.serial||''),type:'check',value:true,full:true});
+  openForm({title:'Evento · motore '+(e.serial||''),intro:`Motore ${fmt(kmTot(e))} km${t?` · turbo ${fmt(kmTot(t))} km`:''}`,fields,submit:'Aggiungi',
+    onSubmit:v=>run(async()=>{const km=num(v.km);if(km<=0)throw new Error('Inserisci i km.');
+      const ev={ev:v.ev,pilot:v.pilot,km,d:today()};
+      await upd('eng',e.id,{events:[...evs(e),ev]});
+      if(t&&v.both)await upd('tur',t.id,{events:[...evs(t),{...ev,eng:e.serial||''}]});
+      toast(fmt(km)+' km aggiunti'+(t&&v.both?' a motore e turbo':' al motore'))})});
+}
+function swapTurboForm(e){
+  const cur=turById(e.turboId);
+  const opts=[{v:'',l:'— nessun turbo —'},...freeTurbos().map(turOpt)];
+  openForm({title:(cur?'Cambia turbo':'Accoppia turbo')+' · motore '+(e.serial||''),intro:cur?`Il turbo attuale <b class="mono">${esc(cur.serial)}</b> (${fmt(kmTot(cur))} km) torna a magazzino con i suoi km.`:'Scegli un turbo libero da accoppiare al motore.',
+    fields:[{id:'tur',label:'Nuovo turbo',type:'select',full:true,options:opts},
+      ...(cur?[{id:'curTo',label:'Il turbo tolto va',type:'select',options:[{v:'disponibile',l:'A magazzino'},{v:'scartato',l:'Scartato (da cambiare)'}],value:'disponibile'}]:[]),
+      {id:'date',label:'Data',type:'date',value:today()},{id:'note',label:'Note (facoltative)',full:true}],submit:'Conferma',
+    onSubmit:v=>run(async()=>{
+      if(!cur&&!v.tur)throw new Error('Scegli un turbo.');
+      const nt=turById(v.tur),ex=v.note?' · '+v.note:'';
+      if(cur)await upd('tur',cur.id,{status:v.curTo,log:logPush(cur,'Tolto dal motore '+(e.serial||'')+' a '+fmt(kmTot(cur))+' km'+ex,v.date)});
+      if(nt)await upd('tur',nt.id,{log:logPush(nt,'Accoppiato al motore '+(e.serial||'')+' a '+fmt(kmTot(nt))+' km'+ex,v.date)});
+      await upd('eng',e.id,{turboId:nt?nt.id:'',log:logPush(e,(nt?'Turbo '+nt.serial+' montato':'Turbo tolto')+(cur?' (tolto '+cur.serial+')':'')+ex,v.date)});
+      toast(nt?'Turbo '+nt.serial+' accoppiato':'Turbo tolto')})});
+}
+function pairTurboForm(t){
+  const engs=S.eng.filter(e=>e.status!=='scartato'&&e.turboId!==t.id);
+  if(!engs.length){toast('Nessun motore a cui accoppiarlo');return}
+  openForm({title:'Accoppia turbo '+(t.serial||''),fields:[{id:'eng',label:'Motore',type:'select',full:true,options:engs.map(e=>{const c=turById(e.turboId);return{v:e.id,l:`${e.serial} · ${fmt(kmTot(e))} km${c?' · ha già il turbo '+c.serial+' (torna a magazzino)':' · senza turbo'}`}})},{id:'date',label:'Data',type:'date',value:today()}],submit:'Accoppia',
+    onSubmit:v=>run(async()=>{const e=engById(v.eng),cur=turById(e.turboId),prev=engOfTurbo(t);
+      if(prev&&prev.id!==e.id)await upd('eng',prev.id,{turboId:'',log:logPush(prev,'Turbo '+t.serial+' tolto (spostato sul motore '+e.serial+')',v.date)});
+      if(cur)await upd('tur',cur.id,{log:logPush(cur,'Tolto dal motore '+e.serial+' a '+fmt(kmTot(cur))+' km',v.date)});
+      await upd('tur',t.id,{log:logPush(t,'Accoppiato al motore '+e.serial+' a '+fmt(kmTot(t))+' km',v.date)});
+      await upd('eng',e.id,{turboId:t.id,log:logPush(e,'Turbo '+t.serial+' montato'+(cur?' (tolto '+cur.serial+')':''),v.date)});toast('Turbo accoppiato')})});
+}
+function revForm(x,kind){
+  const t=kind==='eng'?turById(x.turboId):null,col_=kind==='eng'?'eng':'tur';
+  const fields=[{id:'date',label:'Data revisione',type:'date',value:today()},{id:'by',label:'Eseguita da',ph:'Officina, fornitore…'},{id:'note',label:'Lavori eseguiti',full:true}];
+  openForm({title:'Revisione · '+(kind==='eng'?'motore ':'turbo ')+(x.serial||''),intro:`Azzera i km dalla revisione (ora ${fmt(kmRev(x))} km). Il totale resta ${fmt(kmTot(x))} km.`,fields,submit:'Registra revisione',
+    onSubmit:v=>run(async()=>{const ex=[v.by?'da '+v.by:'',v.note].filter(Boolean).join(' · ');
+      const one=(c,o)=>upd(c,o.id,{revAt:kmTot(o),status:o.status==='scartato'?'scartato':'disponibile',lastRev:v.date,log:logPush(o,'Revisionato a '+fmt(kmTot(o))+' km ('+fmt(kmRev(o))+' km dalla precedente)'+(ex?' · '+ex:''),v.date)});
+      await one(col_,x);toast('Revisione registrata')})});
+}
+function logBox(x,kind){
+  const m=$('#modal');const L=[...(x.log||[])].reverse();const E=[...evs(x)].reverse();
+  m.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><h3>Storico ${kind==='eng'?'motore':'turbo'} ${esc(x.serial||'')}</h3><p class="muted" style="margin:0">${fmt(kmTot(x))} km totali${kind==='eng'?' · '+fmt(kmRev(x))+' km dall’ultima revisione'+(x.lastRev?' ('+dIt(x.lastRev)+')':''):''}</p>
+  <h3 class="sub">Eventi</h3><div class="log">${E.length?E.map(e=>`<div><span class="mono muted">${dIt(e.d)}</span><span><span class="mono">${esc(e.ev)}</span>${e.pilot?' · '+esc(e.pilot):''} · <b class="mono">${fmt(e.km)} km</b>${e.eng?` <span class="muted">(motore ${esc(e.eng)})</span>`:''}</span></div>`).join(''):'<p class="muted" style="margin:0">Nessun evento.</p>'}</div>
+  <h3 class="sub">Movimenti</h3><div class="log">${L.length?L.map(e=>`<div><span class="mono muted">${dIt(e.d)}</span><span>${esc(e.t)}</span></div>`).join(''):'<p class="muted" style="margin:0">Nessun movimento.</p>'}</div>
+  <div class="acts">${W()?`<button class="btn" data-act2="editEvents" data-kind="${kind}" data-id="${esc(x.id)}">Correggi eventi</button>`:''}<button class="btn" data-close>Chiudi</button></div></div>`;
+  m.hidden=false;
+  const b=m.querySelector('[data-act2="editEvents"]');if(b)b.onclick=()=>eventsForm(x,kind);
+}
+function parseEvents(txt){return String(txt||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^(.*?)[\s;:\t,]+(\d+(?:[.,]\d+)?)\s*(km)?$/i);return m?{ev:m[1].trim(),km:num(m[2])}:{ev:l,km:0}})}
+function parseEvents3(txt){return String(txt||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split(/\s*[;|\t]\s*/);if(p.length>=3)return{ev:p[0],pilot:p.slice(1,-1).join(' '),km:num(p[p.length-1])};const r=parseEvents(l)[0];return{...r,pilot:''}})}
+function eventsForm(x,kind){
+  openForm({title:'Correggi eventi · '+(x.serial||''),intro:'Un evento per riga: <b>evento ; pilota ; km</b>. Cancella una riga per togliere l’evento.',
+    fields:[{id:'events',label:'Eventi',type:'textarea',full:true,value:evs(x).map(e=>[e.ev,e.pilot||'',e.km].join(' ; ')).join('\n')}],
+    onSubmit:v=>run(async()=>{const old=evs(x);const ne=parseEvents3(v.events).map(e=>{const o=old.find(z=>z.ev===e.ev);return o?{...o,pilot:e.pilot,km:e.km}:{...e,d:today()}});
+      await upd(kind,x.id,{events:ne});toast('Eventi aggiornati')})});
+}
+
+/* ===== GOMME ===== */
+const tStat=x=>x.status==='nuovo'?'nuovo':'usato';
+const tKm=x=>evs(x).length?evs(x).reduce((a,e)=>a+num(e.km),0):num(x.km);
+const isWet=x=>/^(rain|wet)$/i.test(x.compound||'');
+function tireCard(x){
+  return `<button class="tcard${x.trash?' x':''}" data-act="tireOpen" data-id="${esc(x.id)}"><span class="tcode">${esc(x.label)}</span><span class="tkm"><b>${fmt(tKm(x))}</b> km</span><span class="tst ${x.trash?'x':'ok'}">${x.trash?'X':'Magazzino'}</span></button>`;
+}
+function tireRows(){
+  const q=norm(S.q);
+  const match=x=>!q||[x.label,...WHEELS.map(w=>x[w[0]])].some(v=>norm(v).includes(q));
+  const sort=(a,b)=>(!!a.trash)-(!!b.trash)||String(a.label).localeCompare(b.label,undefined,{numeric:true});
+  if(!S.tires.length)return `<div class="panel empty"><strong>Nessun set di gomme</strong><span>Aggiungi il primo set con «Nuovo set».</span></div>`;
+  const grp=(name,arr)=>{const all=arr.filter(match).sort(sort),inM=all.filter(x=>!x.trash).length;
+    return `<section class="tgrp"><h3 class="sub">${name}<small>${inM} in magazzino · ${all.length-inM} X</small></h3>${all.length?`<div class="tlist">${all.map(tireCard).join('')}</div>`:`<div class="panel empty" style="padding:16px"><span>${q?'Nessun set trovato.':'Nessun set '+name.toLowerCase()+'.'}</span></div>`}</section>`};
+  return grp('Slick',S.tires.filter(x=>!isWet(x)))+grp('Wet',S.tires.filter(isWet));
+}
+function vTires(){
+  return `<div class="sechead"><h2 class="sec">Gomme</h2>${W()?`<button class="btn primary inl" data-act="newTire">Nuovo set</button>`:''}</div>
+  <input id="fq" type="search" data-search="1" value="${esc(S.q)}" placeholder="Cerca set o FIA code" autocomplete="off" style="width:100%">
+  <div id="tireList" style="display:grid;gap:18px">${tireRows()}</div>`;
+}
+function tireDetail(x){
+  if(!x)return;const m=$('#modal');const E=[...evs(x)].reverse();
+  m.innerHTML=`<div class="sheet det" role="dialog" aria-modal="true" aria-label="Set ${esc(x.label)}">
+    <div class="big"><span class="tcode">${esc(x.label)}</span><span class="tst ${x.trash?'x':'ok'}">${x.trash?'X':'In magazzino'}</span></div>
+    <div class="big"><span class="muted">${isWet(x)?'Wet':'Slick'}${x.notes?' · '+esc(x.notes):''}</span><span class="kmbig">${fmt(tKm(x))} km</span></div>
+    <h3 class="sub">FIA code</h3>
+    <div class="fia">${WHEELS.map(w=>`<div><span>${w[1]}</span><b>${esc(x[w[0]]||'—')}</b></div>`).join('')}</div>
+    <h3 class="sub">Ultimi eventi</h3>
+    <div class="log">${E.length?E.map(e=>`<div><b class="mono">${fmt(e.km)} km</b><span class="mono">${esc(e.ev)}</span></div>`).join(''):'<p class="muted" style="margin:0">Nessun evento.</p>'}</div>
+    <div class="acts">${W()?`<button class="btn danger" data-act="tireDel" data-id="${esc(x.id)}">Elimina</button><button class="btn" data-act="tireTrash" data-id="${esc(x.id)}">${x.trash?'Rimetti in magazzino':'Segna X'}</button><button class="btn" data-act="editTire" data-id="${esc(x.id)}">Modifica</button>${x.trash?'':`<button class="btn primary" data-act="tireEvent" data-id="${esc(x.id)}">+ Evento</button>`}`:''}<button class="btn" data-close>Chiudi</button></div></div>`;
+  m.hidden=false;
+}
+function tireForm(x){
+  openForm({title:x?'Modifica set '+x.label:'Nuovo set gomme',fields:[
+    {id:'label',label:'Codice set',value:x?.label,required:true,ph:'BCN-09'},
+    {id:'compound',label:'Tipo',type:'select',options:[{v:'Slick',l:'Slick'},{v:'Wet',l:'Wet'}],value:x&&isWet(x)?'Wet':'Slick'},
+    {id:'status',label:'Stato',type:'select',full:true,options:[{v:'mag',l:'In magazzino'},{v:'x',l:'X (scartato)'}],value:x&&x.trash?'x':'mag'},
+    {id:'events',label:'Km per evento',type:'textarea',full:true,value:x?evs(x).map(e=>e.ev+' '+e.km).join('\n'):'',ph:'20260901_OT_VLC 136\n20260112_PT_EST 62',hint:'Un evento per riga: nome evento e km. I km totali sono la somma.'},
+    {type:'sep',label:'FIA code (facoltativi)'},
+    ...WHEELS.map(w=>({id:w[0],label:w[1],value:x?.[w[0]],scan:true})),
+    {id:'notes',label:'Note',full:true,value:x?.notes}],
+    danger:x?{label:'Elimina set',run:()=>confirmBox('Eliminare il set '+esc(x.label)+'?','Il set viene tolto dal magazzino.','Elimina',()=>run(async()=>{await del('tires',x.id);toast('Set eliminato')}))}:null,
+    onSubmit:v=>run(async()=>{
+      for(const w of WHEELS){const code=norm(v[w[0]]);if(!code)continue;
+        const dup=S.tires.find(y=>(!x||y.id!==x.id)&&WHEELS.some(z=>norm(y[z[0]])===code));
+        if(dup)throw new Error('Il FIA code '+v[w[0]]+' è già nel set '+dup.label+'.');
+        if(WHEELS.filter(z=>norm(v[z[0]])===code).length>1)throw new Error('Il FIA code '+v[w[0]]+' è inserito due volte.')}
+      if(S.tires.some(y=>(!x||y.id!==x.id)&&norm(y.label)===norm(v.label)))throw new Error('Esiste già un set '+v.label+'.');
+      const events=parseEvents(v.events);
+      const d={label:v.label,compound:v.compound,trash:v.status==='x',status:events.some(e=>e.km>0)?'usato':'nuovo',events,km:events.reduce((a,e)=>a+num(e.km),0),notes:v.notes};
+      WHEELS.forEach(w=>d[w[0]]=v[w[0]]||'');
+      if(x)await upd('tires',x.id,d);else await add('tires',d);toast(x?'Set aggiornato':'Set aggiunto')})});
+}
+function tireEventForm(x){
+  openForm({title:'Evento · set '+x.label,intro:'Km attuali: '+fmt(tKm(x)),fields:[{id:'ev',label:'Evento',required:true,ph:'20261012_PT_MUG'},{id:'km',label:'Km',type:'number',required:true}],submit:'Aggiungi',
+    onSubmit:v=>run(async()=>{const km=num(v.km);if(km<=0)throw new Error('Inserisci i km.');const events=[...evs(x),{ev:v.ev,km}];
+      await upd('tires',x.id,{events,km:events.reduce((a,e)=>a+num(e.km),0),status:'usato'});toast(fmt(km)+' km aggiunti a '+x.label)})});
+}
+
+/* ===== IMPOSTAZIONI ===== */
+function vSettings(){
+  const c=S.cfg;
+  return `<div class="sechead"><h2 class="sec">Impostazioni</h2></div>
+  <div class="panel" style="padding:16px;display:grid;gap:14px">
+    <h3 class="sub">Limiti km</h3>
+    <div class="tblwrap"><table><thead><tr><th></th><th class="num">Revisione ogni</th><th class="num">Vita massima</th></tr></thead><tbody>
+      <tr><td><b>Motore</b></td><td class="num">${num(c.engRevKm)?fmt(c.engRevKm)+' km':'—'}</td><td class="num">${num(c.engLifeKm)?fmt(c.engLifeKm)+' km':'—'}</td></tr>
+      </tbody></table></div>
+    <div class="tblwrap"><table><thead><tr><th></th><th class="num">Km performance</th><th class="num">Da cambiare a</th></tr></thead><tbody><tr><td><b>Turbo</b></td><td class="num">${num(c.turPerfKm)?fmt(c.turPerfKm)+' km':'—'}</td><td class="num">${num(c.turLifeKm)?fmt(c.turLifeKm)+' km':'—'}</td></tr></tbody></table></div>
+    <p class="muted" style="margin:0">Motore: giallo al ${fmt(c.warnPct||80)}% del limite, rosso al 100%. Turbo: giallo oltre i km di performance, rosso ai km di cambio. I turbo non hanno revisione.</p>
+    ${W()?`<div><button class="btn" data-act="editLimits">Modifica limiti</button></div>`:''}
+  </div>
+  <div class="panel" style="padding:16px;display:grid;gap:12px">
+    <h3 class="sub">Piloti / vetture</h3>
+    <p class="muted" style="margin:0">Compaiono come suggerimenti nel campo Pilota quando aggiungi un evento a un motore.</p>
+    <div class="btns">${pilots().length?pilots().map(p=>`<span class="chip plain" style="font-size:12px;text-transform:none;letter-spacing:0">${esc(p)}</span>`).join(''):'<span class="muted">Nessun pilota inserito.</span>'}</div>
+    ${W()?`<div><button class="btn" data-act="editPilots">Modifica elenco</button></div>`:''}
+  </div>
+  <div class="panel" style="padding:16px;display:grid;gap:8px">
+    <h3 class="sub">Accesso</h3>
+    <p class="muted" style="margin:0">Chiunque abbia il link può vedere e modificare il magazzino. I dati sono condivisi e si aggiornano in tempo reale su tutti i telefoni.</p>
+  </div>
+  <div class="panel" style="padding:16px;display:grid;gap:8px">
+    <h3 class="sub">Backup</h3>
+    <p class="muted" style="margin:0">Scarica una copia di tutti i dati, oppure carica un file di backup (per esempio <span class="mono">dati-iniziali.json</span>). Il caricamento sovrascrive i documenti con lo stesso codice e non cancella gli altri.</p>
+    <div class="btns"><button class="btn" data-act="exportData">Scarica backup</button>${W()?`<button class="btn" data-act="importData">Carica backup</button>`:''}</div>
+    <input type="file" id="impFile" accept="application/json,.json" hidden>
+  </div>`;
+}
+function limitsForm(){
+  const c=S.cfg;
+  openForm({title:'Limiti km',fields:[{type:'sep',label:'Motore'},{id:'engRevKm',label:'Revisione ogni (km)',type:'number',value:c.engRevKm||''},{id:'engLifeKm',label:'Vita massima (km)',type:'number',value:c.engLifeKm||''},
+    {type:'sep',label:'Turbo'},{id:'turPerfKm',label:'Km suggeriti per la performance',type:'number',value:c.turPerfKm||''},{id:'turLifeKm',label:'Da cambiare a (km)',type:'number',value:c.turLifeKm||''},
+    {type:'sep',label:'Avvisi motore'},{id:'warnPct',label:'Avviso giallo al (% del limite)',type:'number',value:c.warnPct||80}],
+    onSubmit:v=>run(async()=>{await saveCfg({engRevKm:num(v.engRevKm),engLifeKm:num(v.engLifeKm),turPerfKm:num(v.turPerfKm),turLifeKm:num(v.turLifeKm),warnPct:Math.min(99,Math.max(10,num(v.warnPct)||80))});toast('Limiti aggiornati')})});
+}
+function pilotsForm(){
+  openForm({title:'Piloti / vetture',intro:'Uno per riga.',
+    fields:[{id:'list',label:'Elenco',type:'textarea',full:true,value:pilots().join('\n'),ph:'G. Zasov\nT. Stolcermanis'}],
+    onSubmit:v=>run(async()=>{
+      const old=pilots(),nw=[...new Set(v.list.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+      for(let i=0;i<old.length;i++){const o=old[i],n=nw[i];if(n&&!nw.includes(o)&&!old.includes(n)){
+        for(const x of S.tires.filter(x=>x.pilot===o))await upd('tires',x.id,{pilot:n});
+        for(const x of S.eng.filter(x=>x.pilot===o))await upd('eng',x.id,{pilot:n});
+        if(S.pil===o){S.pil=n;store.set('mg_pil',n)}}}
+      await saveCfg({pilots:nw});toast('Elenco aggiornato')})});
+}
+
+/* ---------- azioni ---------- */
+const ACT={
+  newEng:()=>engForm(),editEng:id=>engForm(engById(id)),newTur:()=>turForm(),editTur:id=>turForm(turById(id)),
+  engEvent:id=>engEventForm(engById(id)),swapTurbo:id=>swapTurboForm(engById(id)),pairTurbo:id=>pairTurboForm(turById(id)),
+  engRevDone:id=>revForm(engById(id),'eng'),
+  toRev:id=>{const e=engById(id),t=turById(e.turboId);confirmBox('Mandare in revisione il motore '+esc(e.serial)+'?',t?'Il turbo '+esc(t.serial)+' resta accoppiato: se va in revisione anche lui, cambialo da "Cambia turbo" o dal suo stato.':'Il motore passa allo stato "In revisione".','In revisione',()=>run(async()=>{await upd('eng',id,{status:'revisione',log:logPush(e,'Inviato in revisione a '+fmt(kmTot(e))+' km')});toast('Motore in revisione')}))},
+  logEng:id=>logBox(engById(id),'eng'),logTur:id=>logBox(turById(id),'tur'),
+  newTire:()=>tireForm(),editTire:id=>tireForm(S.tires.find(x=>x.id===id)),tireEvent:id=>tireEventForm(S.tires.find(x=>x.id===id)),tireOpen:id=>tireDetail(S.tires.find(x=>x.id===id)),
+  tireDel:id=>{const x=S.tires.find(y=>y.id===id);if(x)confirmBox('Eliminare il set '+esc(x.label)+'?','Il set viene tolto dal magazzino.','Elimina',()=>run(async()=>{await del('tires',x.id);toast('Set eliminato')}))},
+  tireTrash:id=>{const x=S.tires.find(y=>y.id===id);run(async()=>{await upd('tires',id,{trash:!x.trash});toast(x.trash?x.label+' rimesso in magazzino':x.label+' segnato X')})},
+  goSettings:()=>setTab('impostazioni'),
+  exportData:()=>{const pick=a=>Object.fromEntries(a.map(({id,...d})=>[id,d]));
+    const out={app:'magazzino-motori-gomme',exported:today(),eng:pick(S.eng),tur:pick(S.tur),tires:pick(S.tires),config:{main:S.cfg}};
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download='magazzino-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove()},
+  importData:()=>{const f=$('#impFile');f.value='';f.onchange=()=>{const file=f.files[0];if(!file)return;
+    file.text().then(t=>{let d;try{d=JSON.parse(t)}catch(e){toast('File non valido');return}
+      const n=['eng','tur','tires'].reduce((a,c)=>a+Object.keys(d[c]||{}).length,0);
+      if(!n&&!d.config){toast('Il file non contiene dati del magazzino');return}
+      confirmBox('Caricare il backup?',n+' documenti tra motori, turbo e gomme. Quelli con lo stesso codice vengono sovrascritti.','Carica',()=>run(async()=>{
+        let b=S.db.batch(),k=0;const flush=async()=>{if(k){await b.commit();b=S.db.batch();k=0}};
+        for(const c of ['eng','tur','tires'])for(const [id,doc] of Object.entries(d[c]||{})){b.set(S.db.collection(c).doc(id),doc);if(++k>=400)await flush()}
+        if(d.config&&d.config.main)b.set(S.db.doc('config/main'),{...DEF,...d.config.main}),k++;
+        await flush();toast('Backup caricato')}))})};f.click()},editLimits:limitsForm,editPilots:pilotsForm,
+};
+$('#main').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=ACT[b.dataset.act];if(f)f(b.dataset.id)});
+$('#main').addEventListener('change',e=>{const f=e.target.dataset.filter;if(!f)return;
+  if(f==='old')S.showOld=e.target.checked;
+  render()});
+$('#main').addEventListener('input',e=>{if(!e.target.dataset.search)return;S.q=e.target.value;const l=$('#tireList');if(l)l.innerHTML=tireRows()});
+
+/* ---------- avvio ---------- */
+trObs.observe(document.body,{childList:true,subtree:true,characterData:true});
+render();applyLang();
+function boot(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(!window.firebase){S.blocked='Non riesco a caricare Firebase: controlla la connessione e ricarica.';render();return}
+  if(!cfg||!cfg.apiKey||/INCOLLA/.test(cfg.apiKey)){S.blocked='Manca la configurazione Firebase: incolla i tuoi dati nel file config.js (vedi LEGGIMI).';$('#status').textContent='';render();return}
+  firebase.initializeApp(cfg);
+  const db=firebase.firestore();
+  try{db.settings({ignoreUndefinedProperties:true,merge:true})}catch(e){}
+  db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+  S.db=db;
+  const got=new Set(),N=4;
+  const mark=k=>{got.add(k);if(got.size>=N){S.live=true;$('#status').textContent=navigator.onLine?'Aggiornato in tempo reale':'Offline · le modifiche partono appena torna la rete'}render()};
+  const fail=err=>{if(err&&err.code==='permission-denied'){S.blocked='Il database rifiuta l’accesso: controlla le regole di Firestore (vedi LEGGIMI).';S.db=null;render()}else $('#status').textContent='Connessione interrotta, ricarica la pagina'};
+  for(const n of ['eng','tur','tires'])db.collection(n).onSnapshot(s=>{S[n]=s.docs.map(d=>({id:d.id,...d.data()}));mark(n)},fail);
+  db.doc('config/main').onSnapshot(s=>{S.cfg=s.exists?{...DEF,...s.data()}:{...DEF};mark('cfg')},fail);
+  addEventListener('online',()=>{if(S.live)$('#status').textContent='Aggiornato in tempo reale'});
+  addEventListener('offline',()=>{$('#status').textContent='Offline · le modifiche partono appena torna la rete'});
+}
+boot();
+})();
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body>
+</html>

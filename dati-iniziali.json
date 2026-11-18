@@ -1,0 +1,471 @@
+{
+ "app": "magazzino-motori-gomme",
+ "exported": "2026-11-18",
+ "eng": {
+  "0xkcntihojwmxbau3f6f": {
+   "events": [],
+   "kmStart": 1716,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino con turbo CCC00170"
+    }
+   ],
+   "notes": "",
+   "revAt": 1716,
+   "serial": "823",
+   "status": "disponibile",
+   "turboId": "00ylb2zshltevub31grw"
+  },
+  "d0ppo4ljn42oaih4gf0g": {
+   "events": [],
+   "kmStart": 2813,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino con turbo CLC00050"
+    }
+   ],
+   "notes": "",
+   "revAt": 2813,
+   "serial": "602-A",
+   "status": "disponibile",
+   "turboId": "l2ucp9s92vlwn08fdp90"
+  },
+  "o0bkw852gup8qysdzfun": {
+   "events": [
+    {
+     "d": "2026-11-17",
+     "ev": "20261118_PT_CRE",
+     "km": 205,
+     "pilot": ""
+    }
+   ],
+   "kmStart": 1674,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino con turbo BEC000157"
+    }
+   ],
+   "notes": "",
+   "revAt": 1674,
+   "serial": "754-A",
+   "status": "disponibile",
+   "turboId": "73l8dhwah8gguot44bam"
+  }
+ },
+ "tur": {
+  "00ylb2zshltevub31grw": {
+   "events": [],
+   "kmStart": 1716,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino e accoppiato al motore 823"
+    }
+   ],
+   "notes": "",
+   "revAt": 1716,
+   "serial": "CCC00170",
+   "status": "disponibile"
+  },
+  "73l8dhwah8gguot44bam": {
+   "events": [
+    {
+     "d": "2026-11-17",
+     "eng": "754-A",
+     "ev": "20261118_PT_CRE",
+     "km": 205,
+     "pilot": ""
+    }
+   ],
+   "kmStart": 1663,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino e accoppiato al motore 754-A"
+    }
+   ],
+   "notes": "",
+   "revAt": 1663,
+   "serial": "BEC000157",
+   "status": "disponibile"
+  },
+  "l2ucp9s92vlwn08fdp90": {
+   "events": [],
+   "kmStart": 2813,
+   "log": [
+    {
+     "d": "2026-11-17",
+     "t": "Inserito a magazzino e accoppiato al motore 602-A"
+    }
+   ],
+   "notes": "",
+   "revAt": 2813,
+   "serial": "CLC00050",
+   "status": "disponibile"
+  }
+ },
+ "tires": {
+  "zasov-bcn-01": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260113_PT_BCN",
+     "km": 93
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 93,
+   "label": "BCN-01",
+   "notes": "GRS",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-02": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260113_PT_BCN",
+     "km": 56
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 56,
+   "label": "BCN-02",
+   "notes": "GRS",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-03": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260202_PT_BCN",
+     "km": 163
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 163,
+   "label": "BCN-03",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-04": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260202_PT_BCN",
+     "km": 130
+    },
+    {
+     "ev": "20260304_PT_BCN",
+     "km": 33
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 163,
+   "label": "BCN-04",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-05": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260304_PT_BCN",
+     "km": 116
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 116,
+   "label": "BCN-05",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-06": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260304_PT_BCN",
+     "km": 102
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 102,
+   "label": "BCN-06",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-07": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260304_PT_BCN",
+     "km": 70
+    },
+    {
+     "ev": "202603029_PT_SLO",
+     "km": 83
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 153,
+   "label": "BCN-07",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-bcn-08": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260304_PT_BCN",
+     "km": 40
+    },
+    {
+     "ev": "202603029_PT_SLO",
+     "km": 53
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 93,
+   "label": "BCN-08",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-est-01": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260112_PT_EST",
+     "km": 33
+    },
+    {
+     "ev": "20260202_PT_BCN",
+     "km": 121
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 154,
+   "label": "EST-01",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-est-02": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260112_PT_EST",
+     "km": 130
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 130,
+   "label": "EST-02",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-slo-01": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "202603029_PT_SLO",
+     "km": 195
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 195,
+   "label": "SLO-01",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-slo-02": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "202603029_PT_SLO",
+     "km": 77
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 77,
+   "label": "SLO-02",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-slo-03": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "202603029_PT_SLO",
+     "km": 71
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 71,
+   "label": "SLO-03",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-val-01": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260901_OT_VLC",
+     "km": 136
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 136,
+   "label": "VAL-01",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-val-02": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260901_OT_VLC",
+     "km": 180
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 180,
+   "label": "VAL-02",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-val-03": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260901_OT_VLC",
+     "km": 136
+    },
+    {
+     "ev": "20260112_PT_EST",
+     "km": 62
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 198,
+   "label": "VAL-03",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  },
+  "zasov-val-04": {
+   "compound": "Slick",
+   "events": [
+    {
+     "ev": "20260901_OT_VLC",
+     "km": 48
+    },
+    {
+     "ev": "20260112_PT_EST",
+     "km": 126
+    }
+   ],
+   "fiaFL": "",
+   "fiaFR": "",
+   "fiaRL": "",
+   "fiaRR": "",
+   "km": 174,
+   "label": "VAL-04",
+   "notes": "",
+   "pilot": "G. Zasov",
+   "status": "usato",
+   "trash": true
+  }
+ },
+ "config": {
+  "main": {
+   "engLifeKm": 10000,
+   "engRevKm": 5000,
+   "pilots": [
+    "G. Zasov"
+   ],
+   "turLifeKm": 5000,
+   "turPerfKm": 4000,
+   "warnPct": 80
+  }
+ }
+}

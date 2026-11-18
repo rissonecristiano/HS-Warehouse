@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Accesso libero: chiunque abbia il link dell'app può leggere e modificare.
+    // Sono permesse solo le raccolte usate dall'app (motori, turbo, gomme, impostazioni).
+    match /eng/{id}   { allow read, write: if true; }
+    match /tur/{id}   { allow read, write: if true; }
+    match /tires/{id} { allow read, write: if true; }
+    match /config/main { allow read, write: if true; }
+  }
+}
